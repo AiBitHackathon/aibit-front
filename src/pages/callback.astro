@@ -1,13 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import AuthProvider from '../components/AuthProvider';
 ---
 
 <Layout title="Authorizing...">
-  <div class="flex items-center justify-center min-h-screen">
-    <div class="text-center">
-      <p class="text-gray-600">Completing authorization...</p>
+  <AuthProvider>
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9] mx-auto mb-4"></div>
+        <p class="text-gray-600">Completing authorization...</p>
+      </div>
     </div>
-  </div>
+  </AuthProvider>
 </Layout>
 
 <script>
@@ -16,44 +20,83 @@ import Layout from '../layouts/Layout.astro';
   // Get the authorization code from URL
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
+  const state = urlParams.get('state');
+  const storedState = sessionStorage.getItem('oauth_state');
   
-  if (!code) {
-    window.location.href = '/';
+  // Function to handle errors
+  function handleError(message) {
+    console.error(message);
+    window.location.href = `/?error=${encodeURIComponent(message)}`;
+  }
+
+  // Verify state to prevent CSRF attacks
+  if (!state || state !== storedState) {
+    handleError('Invalid state parameter');
+  } else if (!code) {
+    handleError('No authorization code received');
   } else {
-    // Exchange code for tokens
-    fetch(`${API_URL}/api/token-exchange`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        code,
-        grant_type: 'authorization_code'
-      })
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to exchange code for tokens');
+    // Wait for Privy to be ready
+    const checkPrivyAndProceed = async () => {
+      try {
+        // Wait for window.ethereum to be injected
+        let attempts = 0;
+        while (!window.ethereum && attempts < 20) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (!window.ethereum) {
+          throw new Error('Wallet not found');
+        }
+
+        // Get the wallet address
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (!accounts || accounts.length === 0) {
+          throw new Error('No wallet connected');
+        }
+
+        const walletAddress = accounts[0];
+
+        // Exchange code for tokens with wallet address
+        const response = await fetch(`${API_URL}/api/token-exchange`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Wallet-Address': walletAddress
+          },
+          body: JSON.stringify({
+            code,
+            grant_type: 'authorization_code'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to exchange code for tokens');
+        }
+
+        const data = await response.json();
+        
+        // Store tokens with expiry
+        const tokenData = {
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expires_at: Date.now() + (data.expires_in * 1000),
+          wallet_address: walletAddress
+        };
+        
+        localStorage.setItem('fitbit_tokens', JSON.stringify(tokenData));
+        
+        // Clear the state from session storage
+        sessionStorage.removeItem('oauth_state');
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      } catch (error) {
+        handleError(error instanceof Error ? error.message : 'Failed to complete authorization');
       }
-      return response.json();
-    })
-    .then(data => {
-      // Store tokens with expiry
-      const tokenData = {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at: Date.now() + (data.expires_in * 1000)
-      };
-      
-      localStorage.setItem('fitbit_tokens', JSON.stringify(tokenData));
-      
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
-    })
-    .catch(error => {
-      console.error('Error exchanging code:', error);
-      // Redirect to home page on error
-      window.location.href = '/?error=' + encodeURIComponent(error.message);
-    });
+    };
+
+    // Start the process
+    checkPrivyAndProceed();
   }
 </script>

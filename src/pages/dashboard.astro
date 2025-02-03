@@ -1,501 +1,381 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import AuthProvider from '../components/AuthProvider';
+import Dashboard from '../components/Dashboard';
 ---
 
 <Layout title="Venice - Dashboard">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-    <div class="flex justify-between items-center mb-6 sm:mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Your Health Dashboard</h1>
-      <button
-        id="logoutBtn"
-        class="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Logout
-      </button>
-    </div>
+  <AuthProvider>
+    <Dashboard client:only="react" />
+  </AuthProvider>
+</Layout>
 
-    <!-- Main Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-      <!-- Left Column -->
-      <div class="space-y-6 sm:space-y-8">
-        <!-- Today's Activity -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <h2 class="text-lg sm:text-xl font-semibold p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-white border-b">Today's Activity</h2>
-          <div class="grid grid-cols-2 divide-x divide-gray-100">
-            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div class="text-sm font-medium text-gray-500">Steps</div>
-                <div class="mt-1 text-2xl sm:text-3xl font-bold text-blue-600" id="stepsCount">-</div>
-              </div>
-              <div>
-                <div class="text-sm font-medium text-gray-500">Active Minutes</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold" id="activeMinutes">-</div>
-              </div>
-            </div>
-            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div class="text-sm font-medium text-gray-500">Distance</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold" id="distance">-</div>
-              </div>
-              <div>
-                <div class="text-sm font-medium text-gray-500">Calories Burned</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold text-orange-500" id="calories">-</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Last Night's Sleep -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <h2 class="text-lg sm:text-xl font-semibold p-4 sm:p-6 bg-gradient-to-r from-indigo-50 to-white border-b">Last Night's Sleep</h2>
-          <div class="grid grid-cols-2 divide-x divide-gray-100">
-            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div class="text-sm font-medium text-gray-500">Duration</div>
-                <div class="mt-1 text-2xl sm:text-3xl font-bold text-indigo-600" id="sleepDuration">-</div>
-              </div>
-              <div>
-                <div class="text-sm font-medium text-gray-500">Deep Sleep</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold" id="deepSleep">-</div>
-              </div>
-            </div>
-            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div class="text-sm font-medium text-gray-500">Efficiency</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold" id="efficiency">-</div>
-              </div>
-              <div>
-                <div class="text-sm font-medium text-gray-500">REM Sleep</div>
-                <div class="mt-1 text-xl sm:text-2xl font-semibold" id="remSleep">-</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Right Column -->
-      <div class="space-y-6 sm:space-y-8">
-        <!-- Recent Workouts -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <h2 class="text-lg sm:text-xl font-semibold p-4 sm:p-6 bg-gradient-to-r from-green-50 to-white border-b">Recent Workouts</h2>
-          <div class="divide-y divide-gray-100 max-h-[280px] overflow-y-auto" id="workoutData">
-            <div class="p-4 sm:p-6 text-gray-500">Loading workout data...</div>
-          </div>
-        </section>
-
-        <!-- AI Analysis Button -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-4 sm:p-6">
-            <button id="analyzeBtn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-sm transition-all duration-150 ease-in-out transform hover:scale-[1.02]">
-              Analyze with AI
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- AI Analysis Results - Full Width -->
-    <section class="mt-6 sm:mt-8">
-      <div id="aiAnalysis" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <!-- AI analysis will be inserted here -->
-      </div>
-    </section>
-
-    <!-- Chat Section - Full Width -->
-    <section class="mt-6 sm:mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <h2 class="text-lg sm:text-xl font-semibold p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-white border-b">Ask About Your Health</h2>
-      <div class="p-4 sm:p-6">
-        <div id="chatMessages" class="space-y-3 sm:space-y-4 mb-4 sm:mb-6 max-h-80 sm:max-h-96 overflow-y-auto">
-          <!-- Chat messages will be added here -->
-        </div>
-        <div class="flex gap-3 sm:gap-4">
-          <input
-            type="text"
-            id="chatInput"
-            class="flex-1 rounded-lg border border-gray-300 px-3 sm:px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ask a question about your health data..."
-          />
-          <button
-            id="sendMessage"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base"
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    const API_URL = import.meta.env.PUBLIC_API_URL;
-    
-    // Display functions
-    function displayActivityData(data) {
-      if (!data || !data.summary) {
-        document.getElementById('stepsCount').textContent = 'No data';
-        document.getElementById('activeMinutes').textContent = 'No data';
-        document.getElementById('distance').textContent = 'No data';
-        document.getElementById('calories').textContent = 'No data';
-        return;
-      }
-
-      const summary = data.summary;
-      document.getElementById('stepsCount').textContent = summary.steps.toLocaleString();
-      document.getElementById('activeMinutes').textContent = summary.veryActiveMinutes + ' min';
-      document.getElementById('distance').textContent = summary.distances?.[0]?.distance.toFixed(2) + ' km';
-      document.getElementById('calories').textContent = summary.caloriesOut.toLocaleString();
+<script>
+  const API_URL = import.meta.env.PUBLIC_API_URL;
+  
+  // Display functions
+  function displayActivityData(data) {
+    if (!data || !data.summary) {
+      document.getElementById('stepsCount').textContent = 'No data';
+      document.getElementById('activeMinutes').textContent = 'No data';
+      document.getElementById('distance').textContent = 'No data';
+      document.getElementById('calories').textContent = 'No data';
+      return;
     }
 
-    function displaySleepData(data) {
-      if (!data || !data.sleep || !data.sleep[0]) {
-        document.getElementById('sleepDuration').textContent = 'No data';
-        document.getElementById('deepSleep').textContent = 'No data';
-        document.getElementById('efficiency').textContent = 'No data';
-        document.getElementById('remSleep').textContent = 'No data';
-        return;
-      }
+    const summary = data.summary;
+    document.getElementById('stepsCount').textContent = summary.steps.toLocaleString();
+    document.getElementById('activeMinutes').textContent = summary.veryActiveMinutes + ' min';
+    document.getElementById('distance').textContent = summary.distances?.[0]?.distance.toFixed(2) + ' km';
+    document.getElementById('calories').textContent = summary.caloriesOut.toLocaleString();
+  }
 
-      const sleep = data.sleep[0];
-      const duration = sleep.duration / 3600000; // Convert from milliseconds to hours
-      document.getElementById('sleepDuration').textContent = duration.toFixed(1) + ' hours';
-      document.getElementById('deepSleep').textContent = ((sleep.levels?.summary?.deep?.minutes || 0) / 60).toFixed(1) + ' hours';
-      document.getElementById('efficiency').textContent = sleep.efficiency + '%';
-      document.getElementById('remSleep').textContent = ((sleep.levels?.summary?.rem?.minutes || 0) / 60).toFixed(1) + ' hours';
+  function displaySleepData(data) {
+    if (!data || !data.sleep || !data.sleep[0]) {
+      document.getElementById('sleepDuration').textContent = 'No data';
+      document.getElementById('deepSleep').textContent = 'No data';
+      document.getElementById('efficiency').textContent = 'No data';
+      document.getElementById('remSleep').textContent = 'No data';
+      return;
     }
 
-    function displayWorkoutData(data) {
-      const container = document.getElementById('workoutData');
-      if (!data || !data.activities || data.activities.length === 0) {
-        container.innerHTML = '<div class="p-4 sm:p-6 text-gray-500">No recent workouts</div>';
-        return;
-      }
+    const sleep = data.sleep[0];
+    const duration = sleep.duration / 3600000; // Convert from milliseconds to hours
+    document.getElementById('sleepDuration').textContent = duration.toFixed(1) + ' hours';
+    document.getElementById('deepSleep').textContent = ((sleep.levels?.summary?.deep?.minutes || 0) / 60).toFixed(1) + ' hours';
+    document.getElementById('efficiency').textContent = sleep.efficiency + '%';
+    document.getElementById('remSleep').textContent = ((sleep.levels?.summary?.rem?.minutes || 0) / 60).toFixed(1) + ' hours';
+  }
 
-      const workouts = data.activities.slice(0, 5); // Show last 5 workouts
-      container.innerHTML = workouts.map(workout => `
-        <div class="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-semibold text-gray-900">${workout.name || 'Workout'}</h3>
-              <p class="text-sm text-gray-500 mt-1">
-                ${new Date(workout.startTime).toLocaleDateString()} • 
-                ${workout.duration ? (workout.duration / 60000).toFixed(0) + ' min' : 'N/A'}
-              </p>
-            </div>
-            <div class="text-right">
-              <p class="font-semibold text-orange-500">${workout.calories || 0} cal</p>
-              ${workout.distance ? `<p class="text-sm text-gray-500 mt-1">${workout.distance} km</p>` : ''}
-            </div>
+  function displayWorkoutData(data) {
+    const container = document.getElementById('workoutData');
+    if (!data || !data.activities || data.activities.length === 0) {
+      container.innerHTML = '<div class="p-4 sm:p-6 text-gray-500">No recent workouts</div>';
+      return;
+    }
+
+    const workouts = data.activities.slice(0, 5); // Show last 5 workouts
+    container.innerHTML = workouts.map(workout => `
+      <div class="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="font-semibold text-gray-900">${workout.name || 'Workout'}</h3>
+            <p class="text-sm text-gray-500 mt-1">
+              ${new Date(workout.startTime).toLocaleDateString()} • 
+              ${workout.duration ? (workout.duration / 60000).toFixed(0) + ' min' : 'N/A'}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold text-orange-500">${workout.calories || 0} cal</p>
+            ${workout.distance ? `<p class="text-sm text-gray-500 mt-1">${workout.distance} km</p>` : ''}
           </div>
         </div>
-      `).join('');
+      </div>
+    `).join('');
+  }
+
+  function displayAIAnalysis(data) {
+    const container = document.getElementById('aiAnalysis');
+    if (!data || !data.evaluation) {
+      container.innerHTML = '<div class="p-6 text-red-600">No analysis available</div>';
+      return;
     }
 
-    function displayAIAnalysis(data) {
-      const container = document.getElementById('aiAnalysis');
-      if (!data || !data.evaluation) {
-        container.innerHTML = '<div class="p-6 text-red-600">No analysis available</div>';
-        return;
-      }
+    const { evaluation } = data;
+    container.innerHTML = `
+      <div class="p-6 space-y-8">
+        <!-- Header -->
+        <div class="border-b pb-6">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">${data.message}</h2>
+          <p class="text-lg text-blue-600 font-medium">Status: ${evaluation.overall_status}</p>
+        </div>
 
-      const { evaluation } = data;
-      container.innerHTML = `
-        <div class="p-6 space-y-8">
-          <!-- Header -->
-          <div class="border-b pb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">${data.message}</h2>
-            <p class="text-lg text-blue-600 font-medium">Status: ${evaluation.overall_status}</p>
+        <!-- Achievements -->
+        ${evaluation.achievements?.length ? `
+          <div class="bg-green-50 rounded-xl p-6 border border-green-100">
+            <h3 class="text-lg font-semibold text-green-800 flex items-center gap-2 mb-4">
+              <span class="text-2xl">🎉</span> Achievements
+            </h3>
+            <ul class="grid gap-3">
+              ${evaluation.achievements.map(achievement => `
+                <li class="flex items-start gap-3">
+                  <span class="text-green-500">✓</span>
+                  <span class="text-green-800">${achievement}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Health Metrics -->
+          <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="font-semibold text-gray-900 mb-4">Health Metrics</h3>
+            <div class="grid gap-4">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600">Activity Score</span>
+                <span class="font-semibold">${evaluation.metrics.activity_score}/100</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600">Sleep Score</span>
+                <span class="font-semibold">${evaluation.metrics.sleep_score}/100</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600">Stress Level</span>
+                <span class="font-semibold">${evaluation.metrics.stress_level}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600">Recovery Status</span>
+                <span class="font-semibold">${evaluation.metrics.recovery_status}</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Achievements -->
-          ${evaluation.achievements?.length ? `
-            <div class="bg-green-50 rounded-xl p-6 border border-green-100">
-              <h3 class="text-lg font-semibold text-green-800 flex items-center gap-2 mb-4">
-                <span class="text-2xl">🎉</span> Achievements
-              </h3>
-              <ul class="grid gap-3">
-                ${evaluation.achievements.map(achievement => `
-                  <li class="flex items-start gap-3">
-                    <span class="text-green-500">✓</span>
-                    <span class="text-green-800">${achievement}</span>
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          ` : ''}
-
-          <!-- Metrics Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Health Metrics -->
+          <!-- Workout Stats -->
+          ${data.facts ? `
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-900 mb-4">Health Metrics</h3>
+              <h3 class="font-semibold text-gray-900 mb-4">Workout Stats</h3>
               <div class="grid gap-4">
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Activity Score</span>
-                  <span class="font-semibold">${evaluation.metrics.activity_score}/100</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Sleep Score</span>
-                  <span class="font-semibold">${evaluation.metrics.sleep_score}/100</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Stress Level</span>
-                  <span class="font-semibold">${evaluation.metrics.stress_level}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Recovery Status</span>
-                  <span class="font-semibold">${evaluation.metrics.recovery_status}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Workout Stats -->
-            ${data.facts ? `
-              <div class="bg-gray-50 rounded-xl p-6">
-                <h3 class="font-semibold text-gray-900 mb-4">Workout Stats</h3>
-                <div class="grid gap-4">
-                  ${data.facts.workout_frequency ? `
-                    <div class="flex justify-between items-center">
-                      <span class="text-gray-600">Frequency</span>
-                      <span class="font-semibold">${data.facts.workout_frequency}</span>
-                    </div>
-                  ` : ''}
-                  ${data.facts.avg_workout_duration ? `
-                    <div class="flex justify-between items-center">
-                      <span class="text-gray-600">Average Duration</span>
-                      <span class="font-semibold">${data.facts.avg_workout_duration}</span>
-                    </div>
-                  ` : ''}
-                  ${data.facts.total_workout_calories ? `
-                    <div class="flex justify-between items-center">
-                      <span class="text-gray-600">Total Calories</span>
-                      <span class="font-semibold">${data.facts.total_workout_calories}</span>
-                    </div>
-                  ` : ''}
-                  ${data.facts.workout_streak ? `
-                    <div class="flex justify-between items-center">
-                      <span class="text-gray-600">Current Streak</span>
-                      <span class="font-semibold">${data.facts.workout_streak}</span>
-                    </div>
-                  ` : ''}
-                </div>
-                ${data.facts.personal_bests?.length ? `
-                  <div class="mt-4 pt-4 border-t">
-                    <h4 class="font-medium text-gray-900 mb-2">Personal Bests</h4>
-                    <ul class="space-y-2">
-                      ${data.facts.personal_bests.map(best => `
-                        <li class="flex items-start gap-2">
-                          <span class="text-yellow-500">⭐</span>
-                          <span>${best}</span>
-                        </li>
-                      `).join('')}
-                    </ul>
+                ${data.facts.workout_frequency ? `
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Frequency</span>
+                    <span class="font-semibold">${data.facts.workout_frequency}</span>
+                  </div>
+                ` : ''}
+                ${data.facts.avg_workout_duration ? `
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Average Duration</span>
+                    <span class="font-semibold">${data.facts.avg_workout_duration}</span>
+                  </div>
+                ` : ''}
+                ${data.facts.total_workout_calories ? `
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Calories</span>
+                    <span class="font-semibold">${data.facts.total_workout_calories}</span>
+                  </div>
+                ` : ''}
+                ${data.facts.workout_streak ? `
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Current Streak</span>
+                    <span class="font-semibold">${data.facts.workout_streak}</span>
                   </div>
                 ` : ''}
               </div>
-            ` : ''}
-          </div>
-
-          <!-- Areas of Attention -->
-          ${evaluation.concerns?.length ? `
-            <div class="bg-yellow-50 rounded-xl p-6 border border-yellow-100">
-              <h3 class="font-semibold text-yellow-800 mb-4">Areas of Attention</h3>
-              <ul class="grid gap-3">
-                ${evaluation.concerns.map(concern => `
-                  <li class="flex items-start gap-3">
-                    <span class="text-yellow-500">!</span>
-                    <span class="text-yellow-800">${concern}</span>
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          ` : ''}
-
-          <!-- Recommendations -->
-          <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
-            <h3 class="font-semibold text-blue-800 mb-4">Recommendations</h3>
-            <div class="grid gap-6">
-              ${Object.entries(evaluation.recommendations).map(([category, items]) => items?.length ? `
-                <div>
-                  <h4 class="font-medium text-blue-900 mb-2">${category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h4>
-                  <ul class="grid gap-2">
-                    ${items.map(item => `
-                      <li class="flex items-start gap-3">
-                        <span class="text-blue-500">→</span>
-                        <span class="text-blue-800">${item}</span>
+              ${data.facts.personal_bests?.length ? `
+                <div class="mt-4 pt-4 border-t">
+                  <h4 class="font-medium text-gray-900 mb-2">Personal Bests</h4>
+                  <ul class="space-y-2">
+                    ${data.facts.personal_bests.map(best => `
+                      <li class="flex items-start gap-2">
+                        <span class="text-yellow-500">⭐</span>
+                        <span>${best}</span>
                       </li>
                     `).join('')}
                   </ul>
                 </div>
-              ` : '').join('')}
+              ` : ''}
             </div>
+          ` : ''}
+        </div>
+
+        <!-- Areas of Attention -->
+        ${evaluation.concerns?.length ? `
+          <div class="bg-yellow-50 rounded-xl p-6 border border-yellow-100">
+            <h3 class="font-semibold text-yellow-800 mb-4">Areas of Attention</h3>
+            <ul class="grid gap-3">
+              ${evaluation.concerns.map(concern => `
+                <li class="flex items-start gap-3">
+                  <span class="text-yellow-500">!</span>
+                  <span class="text-yellow-800">${concern}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <!-- Recommendations -->
+        <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
+          <h3 class="font-semibold text-blue-800 mb-4">Recommendations</h3>
+          <div class="grid gap-6">
+            ${Object.entries(evaluation.recommendations).map(([category, items]) => items?.length ? `
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2">${category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h4>
+                <ul class="grid gap-2">
+                  ${items.map(item => `
+                    <li class="flex items-start gap-3">
+                      <span class="text-blue-500">→</span>
+                      <span class="text-blue-800">${item}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : '').join('')}
           </div>
         </div>
-      `;
-    }
+      </div>
+    `;
+  }
 
-    // Initialize healthData globally
-    window.healthData = null;
+  // Initialize healthData globally
+  window.healthData = null;
 
-    async function fetchData() {
-      try {
-        showLoading(true);
-        const tokens = JSON.parse(localStorage.getItem('fitbit_tokens') || '{}');
-        if (!tokens.access_token) {
-          throw new Error('No access token found. Please log in again.');
-        }
-
-        // Fetch activity data through our backend proxy
-        const [activityResponse, sleepResponse, workoutResponse] = await Promise.all([
-          fetch(`${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${new Date().toISOString().split('T')[0]}.json`, { 
-            headers: { 'Authorization': `Bearer ${tokens.access_token}` }
-          }),
-          fetch(`${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${new Date(Date.now() - 86400000).toISOString().split('T')[0]}/${new Date().toISOString().split('T')[0]}.json`, { 
-            headers: { 'Authorization': `Bearer ${tokens.access_token}` }
-          }),
-          fetch(`${API_URL}/api/fitbit/workouts`, { 
-            headers: { 'Authorization': `Bearer ${tokens.access_token}` }
-          })
-        ]);
-
-        const activityData = await activityResponse.json();
-        const sleepData = await sleepResponse.json();
-        const workoutData = await workoutResponse.json();
-
-        displayActivityData(activityData);
-        displaySleepData(sleepData);
-        displayWorkoutData(workoutData);
-
-        // Store the data for AI analysis
-        window.healthData = {
-          activity: activityData.summary,
-          sleep: sleepData.sleep?.[0],
-          workouts: workoutData.activities?.filter(a => 
-            a.activityName !== 'Walk' && a.activityName !== 'Transport'
-          )
-        };
-        
-        document.getElementById('analyzeBtn').disabled = false;
-      } catch (error) {
-        showError(error.message);
-      } finally {
-        showLoading(false);
+  async function fetchData() {
+    try {
+      showLoading(true);
+      const tokens = JSON.parse(localStorage.getItem('fitbit_tokens') || '{}');
+      if (!tokens.access_token) {
+        throw new Error('No access token found. Please log in again.');
       }
-    }
 
-    async function analyzeData() {
-      try {
-        const tokens = JSON.parse(localStorage.getItem('fitbit_tokens') || '{}');
-        if (!tokens.access_token) {
-          throw new Error('No access token found. Please log in again.');
-        }
+      // Fetch activity data through our backend proxy
+      const [activityResponse, sleepResponse, workoutResponse] = await Promise.all([
+        fetch(`${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${new Date().toISOString().split('T')[0]}.json`, { 
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+        }),
+        fetch(`${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${new Date(Date.now() - 86400000).toISOString().split('T')[0]}/${new Date().toISOString().split('T')[0]}.json`, { 
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+        }),
+        fetch(`${API_URL}/api/fitbit/workouts`, { 
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+        })
+      ]);
 
-        const container = document.getElementById('aiAnalysis');
-        container.innerHTML = '<div class="p-6 text-gray-600">Analyzing your data...</div>';
-        
-        // Make sure we have the latest data
-        await fetchData();
+      const activityData = await activityResponse.json();
+      const sleepData = await sleepResponse.json();
+      const workoutData = await workoutResponse.json();
 
-        if (!window.healthData) {
-          throw new Error('No health data available to analyze');
-        }
+      displayActivityData(activityData);
+      displaySleepData(sleepData);
+      displayWorkoutData(workoutData);
 
-        const response = await fetch(`${API_URL}/api/health-analysis`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokens.access_token}`
-          },
-          body: JSON.stringify(window.healthData)
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.details || 'Failed to analyze health data');
-        }
-
-        const analysis = await response.json();
-        displayAIAnalysis(analysis);
-      } catch (error) {
-        showError(error.message);
-      }
-    }
-
-    function showError(message) {
-      const errorDiv = document.getElementById('error');
-      const errorMessage = document.getElementById('errorMessage');
-      if (errorDiv && errorMessage) {
-        errorMessage.textContent = message;
-        errorDiv.classList.remove('hidden');
-      }
-    }
-
-    function showLoading(show) {
-      const loading = document.getElementById('loading');
-      if (loading) {
-        if (show) {
-          loading.classList.remove('hidden');
-        } else {
-          loading.classList.add('hidden');
-        }
-      }
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchData();
+      // Store the data for AI analysis
+      window.healthData = {
+        activity: activityData.summary,
+        sleep: sleepData.sleep?.[0],
+        workouts: workoutData.activities?.filter(a => 
+          a.activityName !== 'Walk' && a.activityName !== 'Transport'
+        )
+      };
       
-      // Set up analyze button
-      const analyzeButton = document.getElementById('analyzeBtn');
-      if (analyzeButton) {
-        analyzeButton.addEventListener('click', analyzeData);
+      document.getElementById('analyzeBtn').disabled = false;
+    } catch (error) {
+      showError(error.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function analyzeData() {
+    try {
+      const tokens = JSON.parse(localStorage.getItem('fitbit_tokens') || '{}');
+      if (!tokens.access_token) {
+        throw new Error('No access token found. Please log in again.');
       }
 
-      // Set up logout button
-      const logoutButton = document.getElementById('logoutBtn');
-      if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-          // Clear Fitbit tokens from localStorage
-          localStorage.removeItem('fitbit_tokens');
-          // Redirect to home page
-          window.location.href = '/';
-        });
+      const container = document.getElementById('aiAnalysis');
+      container.innerHTML = '<div class="p-6 text-gray-600">Analyzing your data...</div>';
+      
+      // Make sure we have the latest data
+      await fetchData();
+
+      if (!window.healthData) {
+        throw new Error('No health data available to analyze');
       }
 
-      // Set up chat
-      const chatInput = document.getElementById('chatInput');
-      const sendButton = document.getElementById('sendMessage');
-      const chatMessages = document.getElementById('chatMessages');
+      const response = await fetch(`${API_URL}/api/health-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokens.access_token}`
+        },
+        body: JSON.stringify(window.healthData)
+      });
 
-      if (chatInput && sendButton && chatMessages) {
-        sendButton.addEventListener('click', () => {
-          const message = chatInput.value.trim();
-          if (message) {
-            // Add user message
-            chatMessages.innerHTML += `
-              <div class="flex justify-end">
-                <div class="bg-[#00B0B9] text-white rounded-lg px-4 py-2 max-w-[80%]">
-                  ${message}
-                </div>
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || 'Failed to analyze health data');
+      }
+
+      const analysis = await response.json();
+      displayAIAnalysis(analysis);
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+
+  function showError(message) {
+    const errorDiv = document.getElementById('error');
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorDiv && errorMessage) {
+      errorMessage.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+  }
+
+  function showLoading(show) {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      if (show) {
+        loading.classList.remove('hidden');
+      } else {
+        loading.classList.add('hidden');
+      }
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchData();
+    
+    // Set up analyze button
+    const analyzeButton = document.getElementById('analyzeBtn');
+    if (analyzeButton) {
+      analyzeButton.addEventListener('click', analyzeData);
+    }
+
+    // Set up logout button
+    const logoutButton = document.getElementById('logoutBtn');
+    if (logoutButton) {
+      logoutButton.addEventListener('click', () => {
+        // Clear Fitbit tokens from localStorage
+        localStorage.removeItem('fitbit_tokens');
+        // Redirect to home page
+        window.location.href = '/';
+      });
+    }
+
+    // Set up chat
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+
+    if (chatInput && sendButton && chatMessages) {
+      sendButton.addEventListener('click', () => {
+        const message = chatInput.value.trim();
+        if (message) {
+          // Add user message
+          chatMessages.innerHTML += `
+            <div class="flex justify-end">
+              <div class="bg-[#00B0B9] text-white rounded-lg px-4 py-2 max-w-[80%]">
+                ${message}
               </div>
-            `;
-            
-            // Clear input
-            chatInput.value = '';
-            
-            // TODO: Send message to AI and display response
-          }
-        });
+            </div>
+          `;
+          
+          // Clear input
+          chatInput.value = '';
+          
+          // TODO: Send message to AI and display response
+        }
+      });
 
-        chatInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendButton.click();
-          }
-        });
-      }
-    });
-  </script>
-</Layout>
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendButton.click();
+        }
+      });
+    }
+  });
+</script>
