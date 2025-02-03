@@ -5,11 +5,13 @@ import node from "@astrojs/node";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import react from '@astrojs/react';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [tailwind()],
+  integrations: [tailwind(), react()],
   output: 'server',
   adapter: node({
     mode: 'standalone'
