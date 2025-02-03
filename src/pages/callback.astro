@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Authorizing...">
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <p class="text-gray-600">Completing authorization...</p>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const API_URL = import.meta.env.PUBLIC_API_URL;
+  
+  // Get the authorization code from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  
+  if (!code) {
+    window.location.href = '/';
+  } else {
+    // Exchange code for tokens
+    fetch(`${API_URL}/api/token-exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code,
+        grant_type: 'authorization_code'
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to exchange code for tokens');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Store tokens with expiry
+      const tokenData = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Date.now() + (data.expires_in * 1000)
+      };
+      
+      localStorage.setItem('fitbit_tokens', JSON.stringify(tokenData));
+      
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    })
+    .catch(error => {
+      console.error('Error exchanging code:', error);
+      // Redirect to home page on error
+      window.location.href = '/?error=' + encodeURIComponent(error.message);
+    });
+  }
+</script>
