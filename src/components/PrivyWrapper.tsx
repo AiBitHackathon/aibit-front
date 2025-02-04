@@ -1,6 +1,7 @@
 // PrivyWrapper.tsx
 import React from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
+import {SmartWalletsProvider} from '@privy-io/react-auth/smart-wallets';
 
 export default function PrivyWrapper({
   children,
@@ -18,16 +19,18 @@ export default function PrivyWrapper({
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["google", "email"],
-        appearance: {
-          theme: "light",
-          accentColor: "#00B0B9",
-          showWalletLoginFirst: false,
+        embeddedWallets: { 
+          ethereum: { 
+            createOnLogin: 'all-users', // defaults to 'off'
+          }, 
         },
-        defaultChainId: 42161,
+        
       }}
     >
-      {children}
+      <SmartWalletsProvider>
+        {children}
+      </SmartWalletsProvider>
+      
     </PrivyProvider>
   );
 }

@@ -1,9 +1,10 @@
 import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
 import { WalletIcon, LogOutIcon } from 'lucide-react';
 
 export default function AuthButton() {
   const { login, logout, authenticated, user, ready } = usePrivy();
+  const { createWallet } = useCreateWallet(); // <-- This hook allows manual wallet creation
   const [isLoading, setIsLoading] = React.useState(false);
 
   // Don't render anything until Privy is ready
@@ -21,6 +22,20 @@ export default function AuthButton() {
       await login();
     } catch (error) {
       console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // New function to handle manual wallet creation
+  const handleCreateWallet = async () => {
+    try {
+      setIsLoading(true);
+      // This creates a new embedded wallet for the user
+      const wallet = await createWallet();
+      console.log('New wallet created:', wallet);
+    } catch (error) {
+      console.error('Error creating wallet:', error);
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +73,7 @@ export default function AuthButton() {
             <p className="text-sm font-medium text-gray-900">
               {user?.wallet?.address
                 ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
-                : "Wallet Connected"}
+                : 'Wallet Connected'}
             </p>
           </div>
         </div>
@@ -70,6 +85,15 @@ export default function AuthButton() {
           <LogOutIcon className="w-5 h-5" />
         </button>
       </div>
+
+      {/* New button to manually create an embedded wallet */}
+      <button
+        type="button"
+        onClick={handleCreateWallet}
+        className="w-full flex items-center justify-center px-6 py-3 bg-white text-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200"
+      >
+        Create Embedded Wallet
+      </button>
     </div>
   );
 }
