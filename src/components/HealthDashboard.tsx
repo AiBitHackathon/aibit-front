@@ -9,14 +9,18 @@ import AIAnalysis from "../components/dashboard/AIAnalysis";
 const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export default function HealthDashboard() {
-  const { user, logout } = usePrivy();
+  const { ready, authenticated, user, logout } = usePrivy();
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogout = async () => {
-    localStorage.removeItem("fitbit_tokens");
-    await logout();
+    try {
+      localStorage.removeItem("fitbit_tokens");
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const fetchData = async () => {
@@ -79,34 +83,47 @@ export default function HealthDashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Your Health Dashboard
         </h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:block">
+            <p className="text-sm text-gray-500">
+              {ready &&
+                authenticated &&
+                user?.wallet?.address &&
+                `${user.wallet.address.slice(
+                  0,
+                  6
+                )}...${user.wallet.address.slice(-4)}`}
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-          Logout
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
       </div>
-  
+
       {error && (
         <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
           {error}
         </div>
       )}
-  
+
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9]"></div>
@@ -123,10 +140,10 @@ export default function HealthDashboard() {
               <WorkoutSection data={healthData?.workouts} />
             </div>
           </div>
-  
+
           {/* AI Analysis Section - Now outside the grid */}
           <AIAnalysis healthData={healthData} onRefreshData={fetchData} />
-          
+
           {/* Chat Section */}
           <ChatSection />
         </div>
