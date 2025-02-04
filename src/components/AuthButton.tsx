@@ -1,13 +1,19 @@
-import React from 'react';
-import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
-import { WalletIcon, LogOutIcon } from 'lucide-react';
+// AuthButton.tsx
+import React from "react";
+import { usePrivy, useCreateWallet } from "@privy-io/react-auth";
+import { WalletIcon, LogOutIcon } from "lucide-react";
 
 export default function AuthButton() {
   const { login, logout, authenticated, user, ready } = usePrivy();
-  const { createWallet } = useCreateWallet(); // <-- This hook allows manual wallet creation
+  const { createWallet } = useCreateWallet(); // Allows manual wallet creation
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // Don't render anything until Privy is ready
+  React.useEffect(() => {
+    console.log("AuthButton state:");
+    console.log("  authenticated:", authenticated);
+    console.log("  user:", user);
+  }, [authenticated, user]);
+
   if (!ready) {
     return (
       <div className="w-full flex items-center justify-center px-6 py-3 bg-white text-gray-800 rounded-lg shadow-sm border border-gray-200">
@@ -21,21 +27,21 @@ export default function AuthButton() {
       setIsLoading(true);
       await login();
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // New function to handle manual wallet creation
   const handleCreateWallet = async () => {
     try {
       setIsLoading(true);
-      // This creates a new embedded wallet for the user
       const wallet = await createWallet();
-      console.log('New wallet created:', wallet);
+      console.log("New wallet created:", wallet);
+      // Force a page reload to update the Privy context with the new wallet info.
+      window.location.reload();
     } catch (error) {
-      console.error('Error creating wallet:', error);
+      console.error("Error creating wallet:", error);
     } finally {
       setIsLoading(false);
     }
@@ -72,8 +78,11 @@ export default function AuthButton() {
           <div>
             <p className="text-sm font-medium text-gray-900">
               {user?.wallet?.address
-                ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
-                : 'Wallet Connected'}
+                ? `${user.wallet.address.slice(
+                    0,
+                    6
+                  )}...${user.wallet.address.slice(-4)}`
+                : "Wallet Connected"}
             </p>
           </div>
         </div>
@@ -86,7 +95,7 @@ export default function AuthButton() {
         </button>
       </div>
 
-      {/* New button to manually create an embedded wallet */}
+      {/* Button for manual embedded wallet creation */}
       <button
         type="button"
         onClick={handleCreateWallet}

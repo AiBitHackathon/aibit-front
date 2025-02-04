@@ -1,5 +1,5 @@
-import React from 'react';
-import { PrivyProvider } from '@privy-io/react-auth';
+import React from "react";
+import { PrivyProvider } from "@privy-io/react-auth";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const appId = import.meta.env.PUBLIC_PRIVY_APP_ID;
 
   React.useEffect(() => {
-    console.log('Auth Provider mounting with app ID:', appId);
+    console.log("Auth Provider mounting with app ID:", appId);
     setMounted(true);
   }, [appId]);
 
@@ -23,7 +23,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }
 
   if (!appId) {
-    console.error('Missing Privy App ID');
+    console.error("Missing Privy App ID");
     return (
       <div className="text-red-500 p-4">
         Configuration Error: Missing Privy App ID
@@ -35,10 +35,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ['google', 'email'],
+        loginMethods: ["google", "email"],
         appearance: {
-          theme: 'light',
-          accentColor: '#00B0B9',
+          theme: "light",
+          accentColor: "#00B0B9",
           showWalletLoginFirst: false,
         },
       }}

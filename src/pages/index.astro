@@ -1,17 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import HomePage from '../components/HomePage';
-
-const FITBIT_CLIENT_ID = import.meta.env.PUBLIC_FITBIT_CLIENT_ID;
-const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL;
-const REDIRECT_URI = `${PUBLIC_API_URL}/callback`;
-const SCOPE = 'activity profile sleep';
-const state = Math.random().toString(36).substring(2);
-const authUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;
+import App from '../components/App';
 ---
 
 <Layout title="Venice - AI Fitness Assistant">
-  <HomePage client:only="react" />
+  <!-- Only one React island, wrapping your entire app -->
+  <App client:only="react" />
 </Layout>
 
 <script>
