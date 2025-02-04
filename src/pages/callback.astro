@@ -1,101 +1,83 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import AuthProvider from '../components/AuthProvider';
 ---
 
 <Layout title="Authorizing...">
-  <AuthProvider>
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9] mx-auto mb-4"></div>
-        <p class="text-gray-600">Completing authorization...</p>
-      </div>
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9] mx-auto mb-4"></div>
+      <p class="text-gray-600">Completing Fitbit authorization...</p>
+      <p id="debug" class="text-xs text-gray-400 mt-2"></p>
     </div>
-  </AuthProvider>
+  </div>
 </Layout>
 
 <script>
-  const API_URL = import.meta.env.PUBLIC_API_URL;
-  
-  // Get the authorization code and state from the URL
+  const API_URL = import.meta.env.PUBLIC_API_URL.replace(/\/$/, '');
+  const debug = document.getElementById('debug');
+  const debugLog = (msg) => {
+    console.log(msg);
+    if (debug) debug.textContent = msg;
+  };
+
+  // Get Fitbit auth code and state
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   const state = urlParams.get('state');
   const storedState = sessionStorage.getItem('oauth_state');
-  
-  // Function to handle errors
-  function handleError(message) {
-    console.error(message);
-    window.location.href = `/?error=${encodeURIComponent(message)}`;
-  }
 
-  // Verify state to prevent CSRF attacks
-  if (!state || state !== storedState) {
-    handleError('Invalid state parameter');
-  } else if (!code) {
-    handleError('No authorization code received');
+  // Get stored wallet address
+  const walletAddress = sessionStorage.getItem('wallet_address');
+  debugLog(`Processing Fitbit auth for wallet: ${walletAddress?.substring(0, 8)}...`);
+
+  if (!code || !state || state !== storedState) {
+    debugLog('Invalid state or missing code');
+    sessionStorage.removeItem('oauth_state');
+    window.location.replace('/dashboard?error=Invalid authorization');
   } else {
-    // Wait for the wallet to be available (via window.ethereum)
-    const checkPrivyAndProceed = async () => {
-      try {
-        let attempts = 0;
-        while (!window.ethereum && attempts < 20) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          attempts++;
-        }
-
-        if (!window.ethereum) {
-          throw new Error('Wallet not found');
-        }
-
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (!accounts || accounts.length === 0) {
-          throw new Error('No wallet connected');
-        }
-
-        const walletAddress = accounts[0];
-
-        // Send the authorization code and redirect_uri to your backend for token exchange
-        const response = await fetch(`${API_URL}/api/token-exchange`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Wallet-Address': walletAddress
-          },
-          body: JSON.stringify({
-            code,
-            grant_type: 'authorization_code',
-            redirect_uri: `${API_URL}/callback`
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to exchange code for tokens');
-        }
-
-        const data = await response.json();
-
-        // Store tokens with expiry info
-        const tokenData = {
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-          expires_at: Date.now() + (data.expires_in * 1000),
-          wallet_address: walletAddress
-        };
-
-        localStorage.setItem('fitbit_tokens', JSON.stringify(tokenData));
-        
-        // Clear the state from session storage
-        sessionStorage.removeItem('oauth_state');
-        
-        // Redirect to the dashboard
-        window.location.href = '/dashboard';
-      } catch (error) {
-        handleError(error instanceof Error ? error.message : 'Failed to complete authorization');
+    fetch(`${API_URL}/api/token-exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Wallet-Address': walletAddress || ''
+      },
+      body: JSON.stringify({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: 'https://localhost:8888/callback'
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        debugLog(`Token exchange failed: ${response.status}`);
+        throw new Error('Token exchange failed');
       }
-    };
+      return response.json();
+    })
+    .then(data => {
+      if (!data.access_token) {
+        debugLog('No access token in response');
+        throw new Error('No access token received');
+      }
+      
+      debugLog('Storing Fitbit tokens...');
+      localStorage.setItem('fitbit_tokens', JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Date.now() + (data.expires_in * 1000),
+        wallet_address: walletAddress
+      }));
 
-    // Begin processing the OAuth callback and token exchange
-    checkPrivyAndProceed();
+      sessionStorage.removeItem('oauth_state');
+      debugLog('Success! Redirecting to dashboard...');
+      
+      window.location.replace('/dashboard');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      debugLog(`Error: ${error.message}`);
+      sessionStorage.removeItem('oauth_state');
+      window.location.replace(`/dashboard?error=${encodeURIComponent(error.message)}`);
+    });
   }
 </script>

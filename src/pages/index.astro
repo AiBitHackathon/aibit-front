@@ -4,12 +4,23 @@ import App from '../components/App';
 ---
 
 <Layout title="Venice - AI Fitness Assistant">
-  <!-- Only one React island, wrapping your entire app -->
   <App client:only="react" />
 </Layout>
 
 <script>
-  // Handle any client-side errors
+  // Add path change detection
+  let lastPath = window.location.pathname;
+  
+  // Check for path changes
+  setInterval(() => {
+    const currentPath = window.location.pathname;
+    if (currentPath !== lastPath) {
+      lastPath = currentPath;
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  }, 100);
+
+  // Global error handling
   const errorDiv = document.getElementById('error');
   const errorMessage = document.getElementById('errorMessage');
 

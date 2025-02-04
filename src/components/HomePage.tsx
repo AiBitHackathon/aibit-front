@@ -1,35 +1,50 @@
-// HomePage.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import AuthButton from "./AuthButton";
 
 export default function HomePage() {
   const { authenticated, user } = usePrivy();
-  const [isConnectingFitbit, setIsConnectingFitbit] = React.useState(false);
+  const [isConnectingFitbit, setIsConnectingFitbit] = useState(false);
 
   const FITBIT_CLIENT_ID = import.meta.env.PUBLIC_FITBIT_CLIENT_ID;
-  const REDIRECT_URI = "https://localhost:3000/callback";
+  const REDIRECT_URI = "https://localhost:8888/callback";
   const SCOPE = "activity profile sleep";
 
   const handleFitbitConnect = () => {
     setIsConnectingFitbit(true);
     const state = Math.random().toString(36).substring(2);
     sessionStorage.setItem("oauth_state", state);
+
+    // Don't set a return path if we're already on dashboard
+    if (window.location.pathname !== "/dashboard") {
+      sessionStorage.setItem("oauth_return_path", "/dashboard");
+    }
+
     const authUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      REDIRECT_URI
+      "https://localhost:8888/callback"
     )}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;
+
+    // Store current page to prevent unwanted redirects
+    sessionStorage.setItem("fitbit_auth_origin", window.location.pathname);
+
     window.location.href = authUrl;
   };
 
-  // For debugging, get the wallet address explicitly
-  const walletAddress = user?.wallet?.address;
-
-  React.useEffect(() => {
-    console.log("HomePage state:");
-    console.log("  authenticated:", authenticated);
-    console.log("  user:", user);
-    console.log("  walletAddress:", walletAddress);
-  }, [authenticated, user, walletAddress]);
+  // Only auto-forward if we're on the homepage
+  useEffect(() => {
+    if (
+      authenticated &&
+      user?.wallet?.address &&
+      window.location.pathname === "/"
+    ) {
+      const returnPath = sessionStorage.getItem("oauth_return_path");
+      if (returnPath && returnPath !== "/") {
+        console.log("Auto-forwarding to", returnPath);
+        sessionStorage.removeItem("oauth_return_path");
+        window.location.href = returnPath;
+      }
+    }
+  }, [authenticated, user]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#00B0B9] to-[#008C94]">
@@ -43,14 +58,7 @@ export default function HomePage() {
           <AuthButton />
         </div>
 
-        {/* Debug info */}
-        <div className="mt-4 text-gray-700">
-          <p>authenticated: {authenticated ? "true" : "false"}</p>
-          <p>walletAddress: {walletAddress || "none"}</p>
-        </div>
-
-        {/* Render Fitbit UI only if authenticated and a wallet address exists */}
-        {authenticated && walletAddress && (
+        {authenticated && user?.wallet?.address && (
           <div className="fitbit-section mt-6">
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -65,7 +73,9 @@ export default function HomePage() {
 
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <p className="text-sm text-gray-600 mb-2">Connected Wallet:</p>
-              <p className="font-mono text-sm">{walletAddress}</p>
+              <p className="font-mono text-sm truncate">
+                {user.wallet.address}
+              </p>
             </div>
 
             <button

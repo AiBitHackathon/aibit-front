@@ -1,6 +1,5 @@
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useNavigate } from '@astrojs/router';
 
 interface HealthData {
   steps: number;
