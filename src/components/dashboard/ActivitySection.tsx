@@ -26,7 +26,9 @@ export default function ActivitySection({ data }: ActivitySectionProps) {
         <div>
           <div className="text-blue-600 text-sm mb-1">⏱️ Active Minutes</div>
           <div className="text-2xl font-semibold">
-            {data?.summary?.fairlyActiveMinutes + data?.summary?.veryActiveMinutes || "-"} min
+            {data?.summary?.fairlyActiveMinutes +
+              data?.summary?.veryActiveMinutes || "-"}{" "}
+            min
           </div>
         </div>
         <div>

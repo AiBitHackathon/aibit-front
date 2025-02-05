@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import ActivitySection from "../components/dashboard/ActivitySection";
 import SleepSection from "../components/dashboard/SleepSection";
-import WorkoutSection from "../components/dashboard/WorkoutSection";
+import StepsHistory from "../components/dashboard/StepsHistory";
+import WorkoutHistory from "../components/dashboard/WorkoutHistory";
 import FloatingChat from "../components/dashboard/FloatingChat";
 import AIAnalysis from "../components/dashboard/AIAnalysis";
 
@@ -28,33 +29,35 @@ export default function HealthDashboard() {
     try {
       setLoading(true);
       setError(null);
+
       const tokens = JSON.parse(localStorage.getItem("fitbit_tokens") || "{}");
       if (!tokens.access_token) {
         throw new Error("No access token found. Please log in again.");
       }
 
-      const [activityResponse, sleepResponse, workoutResponse] =
-        await Promise.all([
-          fetch(
-            `${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${
-              new Date().toISOString().split("T")[0]
-            }.json`,
-            {
-              headers: { Authorization: `Bearer ${tokens.access_token}` },
-            }
-          ),
-          fetch(
-            `${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${
-              new Date(Date.now() - 86400000).toISOString().split("T")[0]
-            }/${new Date().toISOString().split("T")[0]}.json`,
-            {
-              headers: { Authorization: `Bearer ${tokens.access_token}` },
-            }
-          ),
-          fetch(`${API_URL}/api/fitbit/workouts`, {
+      const [activityResponse, sleepResponse, workoutResponse] = await Promise.all([
+        fetch(
+          `${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${
+            new Date().toISOString().split("T")[0]
+          }.json`,
+          {
             headers: { Authorization: `Bearer ${tokens.access_token}` },
-          }),
-        ]);
+          }
+        ),
+        fetch(
+          `${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${
+            new Date(Date.now() - 86400000).toISOString().split("T")[0]
+          }/${new Date().toISOString().split("T")[0]}.json`,
+          {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          }
+        ),
+        fetch(`${API_URL}/api/fitbit/proxy/1/user/-/activities/list.json?beforeDate=${
+          new Date().toISOString().split('T')[0]
+        }&sort=desc&offset=0&limit=10`, {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        }),
+      ]);
 
       const [activityData, sleepData, workoutData] = await Promise.all([
         activityResponse.json(),
@@ -68,6 +71,7 @@ export default function HealthDashboard() {
         workouts: workoutData,
       });
     } catch (error) {
+      console.error("Error fetching health data:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch data");
     } finally {
       setLoading(false);
@@ -134,28 +138,36 @@ export default function HealthDashboard() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9]"></div>
         </div>
       ) : (
-        <div className="space-y-6 sm:space-y-8">
-          {/* Main Grid Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-            <div className="space-y-6 sm:space-y-8">
-              <ActivitySection data={healthData?.activity} />
-              <SleepSection data={healthData?.sleep} />
+        healthData && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Main Grid Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              {/* Left Column */}
+              <div className="space-y-6 sm:space-y-8">
+                <ActivitySection data={healthData?.activity} />
+                <StepsHistory 
+                  accessToken={JSON.parse(localStorage.getItem("fitbit_tokens") || "{}").access_token} 
+                />
+              </div>
+              
+              {/* Right Column */}
+              <div className="space-y-6 sm:space-y-8">
+                <SleepSection data={healthData?.sleep} />
+                <WorkoutHistory data={healthData?.workouts?.activities || []} />
+              </div>
             </div>
-            <div className="space-y-6 sm:space-y-8">
-              <WorkoutSection data={healthData?.workouts} />
-            </div>
+
+            {/* AI Analysis Section */}
+            <AIAnalysis
+              healthData={healthData}
+              onRefreshData={fetchData}
+              onAnalysisComplete={handleAnalysisComplete}
+            />
+
+            {/* Floating Chat */}
+            {showChat && <FloatingChat healthData={healthData} />}
           </div>
-
-          {/* AI Analysis Section - Now outside the grid */}
-          <AIAnalysis 
-            healthData={healthData} 
-            onRefreshData={fetchData}
-            onAnalysisComplete={handleAnalysisComplete}
-          />
-
-          {/* Floating Chat */}
-          {showChat && <FloatingChat healthData={healthData} />}
-        </div>
+        )
       )}
     </div>
   );
