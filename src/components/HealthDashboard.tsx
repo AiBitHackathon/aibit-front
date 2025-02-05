@@ -3,7 +3,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import ActivitySection from "../components/dashboard/ActivitySection";
 import SleepSection from "../components/dashboard/SleepSection";
 import WorkoutSection from "../components/dashboard/WorkoutSection";
-import ChatSection from "../components/dashboard/ChatSection";
+import FloatingChat from "../components/dashboard/FloatingChat";
 import AIAnalysis from "../components/dashboard/AIAnalysis";
 
 const API_URL = import.meta.env.PUBLIC_API_URL;
@@ -13,6 +13,7 @@ export default function HealthDashboard() {
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -71,6 +72,10 @@ export default function HealthDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAnalysisComplete = () => {
+    setTimeout(() => setShowChat(true), 500);
   };
 
   useEffect(() => {
@@ -142,10 +147,14 @@ export default function HealthDashboard() {
           </div>
 
           {/* AI Analysis Section - Now outside the grid */}
-          <AIAnalysis healthData={healthData} onRefreshData={fetchData} />
+          <AIAnalysis 
+            healthData={healthData} 
+            onRefreshData={fetchData}
+            onAnalysisComplete={handleAnalysisComplete}
+          />
 
-          {/* Chat Section */}
-          <ChatSection />
+          {/* Floating Chat */}
+          {showChat && <FloatingChat healthData={healthData} />}
         </div>
       )}
     </div>
