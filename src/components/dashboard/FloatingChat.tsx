@@ -142,7 +142,7 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
 
       {/* Chat Window */}
       <div
-        className={`fixed bottom-6 right-6 w-96 bg-white rounded-lg shadow-xl transition-all duration-300 transform ${
+        className={`fixed bottom-6 right-6 w-96 bg-blue-50 rounded-lg shadow-xl border-2 border-[#00B0B9] transition-all duration-300 transform ${
           isOpen ? "scale-100 translate-y-0" : "scale-0 translate-y-12"
         }`}
       >

@@ -12,6 +12,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL;
 export default function HealthDashboard() {
   const { ready, authenticated, user, logout } = usePrivy();
   const [healthData, setHealthData] = useState<any>(null);
+  const [fitbitId, setFitbitId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -35,29 +36,33 @@ export default function HealthDashboard() {
         throw new Error("No access token found. Please log in again.");
       }
 
-      const [activityResponse, sleepResponse, workoutResponse] = await Promise.all([
-        fetch(
-          `${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${
-            new Date().toISOString().split("T")[0]
-          }.json`,
-          {
-            headers: { Authorization: `Bearer ${tokens.access_token}` },
-          }
-        ),
-        fetch(
-          `${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${
-            new Date(Date.now() - 86400000).toISOString().split("T")[0]
-          }/${new Date().toISOString().split("T")[0]}.json`,
-          {
-            headers: { Authorization: `Bearer ${tokens.access_token}` },
-          }
-        ),
-        fetch(`${API_URL}/api/fitbit/proxy/1/user/-/activities/list.json?beforeDate=${
-          new Date().toISOString().split('T')[0]
-        }&sort=desc&offset=0&limit=10`, {
-          headers: { Authorization: `Bearer ${tokens.access_token}` },
-        }),
-      ]);
+      const [activityResponse, sleepResponse, workoutResponse] =
+        await Promise.all([
+          fetch(
+            `${API_URL}/api/fitbit/proxy/1/user/-/activities/date/${
+              new Date().toISOString().split("T")[0]
+            }.json`,
+            {
+              headers: { Authorization: `Bearer ${tokens.access_token}` },
+            }
+          ),
+          fetch(
+            `${API_URL}/api/fitbit/proxy/1.2/user/-/sleep/date/${
+              new Date(Date.now() - 86400000).toISOString().split("T")[0]
+            }/${new Date().toISOString().split("T")[0]}.json`,
+            {
+              headers: { Authorization: `Bearer ${tokens.access_token}` },
+            }
+          ),
+          fetch(
+            `${API_URL}/api/fitbit/proxy/1/user/-/activities/list.json?beforeDate=${
+              new Date().toISOString().split("T")[0]
+            }&sort=desc&offset=0&limit=10`,
+            {
+              headers: { Authorization: `Bearer ${tokens.access_token}` },
+            }
+          ),
+        ]);
 
       const [activityData, sleepData, workoutData] = await Promise.all([
         activityResponse.json(),
@@ -82,6 +87,31 @@ export default function HealthDashboard() {
     setTimeout(() => setShowChat(true), 500);
   };
 
+  // Fetch Fitbit profile to get the user ID
+  useEffect(() => {
+    async function fetchFitbitProfile() {
+      const tokens = JSON.parse(localStorage.getItem("fitbit_tokens") || "{}");
+      if (!tokens.access_token) return;
+      try {
+        const res = await fetch(`${API_URL}/api/fitbit/profile`, {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
+        if (res.ok) {
+          const profileData = await res.json();
+          // Assuming the Fitbit ID is stored as the encodedId in profileData.user:
+          setFitbitId(profileData.user?.encodedId || null);
+        } else {
+          console.error("Failed to fetch Fitbit profile");
+        }
+      } catch (error) {
+        console.error("Error fetching Fitbit profile:", error);
+      }
+    }
+    fetchFitbitProfile();
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -93,17 +123,15 @@ export default function HealthDashboard() {
           Your Health Dashboard
         </h1>
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block">
-            <p className="text-sm text-gray-500">
-              {ready &&
-                authenticated &&
-                user?.wallet?.address &&
-                `${user.wallet.address.slice(
-                  0,
-                  6
-                )}...${user.wallet.address.slice(-4)}`}
-            </p>
-          </div>
+          {fitbitId && (
+            <p className="text-sm text-gray-500">Fitbit ID: {fitbitId}</p>
+          )}
+          <a
+            href="/leaderboard"
+            className="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
+          >
+            Leaderboard
+          </a>
           <button
             onClick={handleLogout}
             className="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
@@ -140,19 +168,23 @@ export default function HealthDashboard() {
       ) : (
         healthData && (
           <div className="space-y-6 sm:space-y-8">
-            {/* Main Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-              {/* Left Column */}
-              <div className="space-y-6 sm:space-y-8">
+            {/* Uniform 2×2 Grid Layout for the 4 Sections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-4 border rounded-lg shadow">
                 <ActivitySection data={healthData?.activity} />
-                <StepsHistory 
-                  accessToken={JSON.parse(localStorage.getItem("fitbit_tokens") || "{}").access_token} 
+              </div>
+              <div className="bg-white p-4 border rounded-lg shadow">
+                <SleepSection data={healthData?.sleep} />
+              </div>
+              <div className="bg-white p-4 border rounded-lg shadow">
+                <StepsHistory
+                  accessToken={
+                    JSON.parse(localStorage.getItem("fitbit_tokens") || "{}")
+                      .access_token
+                  }
                 />
               </div>
-              
-              {/* Right Column */}
-              <div className="space-y-6 sm:space-y-8">
-                <SleepSection data={healthData?.sleep} />
+              <div className="bg-white p-4 border rounded-lg shadow">
                 <WorkoutHistory data={healthData?.workouts?.activities || []} />
               </div>
             </div>
