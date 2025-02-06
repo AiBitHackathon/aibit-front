@@ -1,49 +1,117 @@
-import React from "react";
-import { PrivyProvider } from "@privy-io/react-auth";
+import React, { useEffect } from "react";
+import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
+import { useWalletStore } from "../stores/walletStore";
 
-interface AuthProviderProps {
+const PRIVY_APP_ID = import.meta.env.PUBLIC_PRIVY_APP_ID;
+
+interface Props {
   children: React.ReactNode;
 }
 
-export default function AuthProvider({ children }: AuthProviderProps) {
-  const [mounted, setMounted] = React.useState(false);
-  const appId = import.meta.env.PUBLIC_PRIVY_APP_ID;
-
-  React.useEffect(() => {
-    console.log("Auth Provider mounting with app ID:", appId);
-    setMounted(true);
-  }, [appId]);
-
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9]" />
-      </div>
-    );
-  }
-
-  if (!appId) {
-    console.error("Missing Privy App ID");
-    return (
-      <div className="text-red-500 p-4">
-        Configuration Error: Missing Privy App ID
-      </div>
-    );
-  }
+export default function AuthProvider({ children }: Props) {
+  const handleLogin = () => {
+    console.log("User logged in");
+  };
 
   return (
     <PrivyProvider
-      appId={appId}
+      appId={PRIVY_APP_ID}
+      onSuccess={handleLogin}
       config={{
-        loginMethods: ["google", "email"],
+        loginMethods: ["wallet", "email"],
         appearance: {
           theme: "light",
           accentColor: "#00B0B9",
-          showWalletLoginFirst: false,
+          showWalletLoginFirst: true,
         },
       }}
     >
-      {children}
+      <WalletHandler>{children}</WalletHandler>
     </PrivyProvider>
   );
+}
+
+function WalletHandler({ children }: { children: React.ReactNode }) {
+  const { ready, authenticated, user } = usePrivy();
+  const { setWalletAddress } = useWalletStore();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkWallet = async () => {
+      if (!ready || !authenticated || !user) {
+        console.log('Not ready for wallet check:', { ready, authenticated, user });
+        return;
+      }
+
+      try {
+        // Try Privy's embedded provider first
+        const provider = (window as any).ethereum;
+        if (provider) {
+          const accounts = await provider.request({ method: 'eth_accounts' });
+          console.log('Got accounts from provider:', accounts);
+          if (accounts?.[0] && mounted) {
+            console.log('Setting wallet from provider:', accounts[0]);
+            setWalletAddress(accounts[0]);
+            return;
+          }
+        }
+
+        // Then try user.wallet
+        if (user.wallet?.address && mounted) {
+          console.log('Setting wallet from user.wallet:', user.wallet.address);
+          setWalletAddress(user.wallet.address);
+          return;
+        }
+
+        // Finally try getEthereumAccounts
+        const wallets = await user.getEthereumAccounts();
+        if (wallets?.[0]?.address && mounted) {
+          console.log('Setting wallet from getEthereumAccounts:', wallets[0].address);
+          setWalletAddress(wallets[0].address);
+          return;
+        }
+      } catch (error) {
+        console.error('Error getting wallet:', error);
+      }
+    };
+
+    // Check wallet when dependencies change
+    checkWallet();
+
+    // Set up account change listener
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (!mounted) return;
+      console.log('Accounts changed:', accounts);
+      if (accounts?.[0]) {
+        setWalletAddress(accounts[0]);
+      } else {
+        setWalletAddress(null);
+      }
+    };
+
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      (window as any).ethereum.on('accountsChanged', handleAccountsChanged);
+    }
+
+    // Cleanup
+    return () => {
+      mounted = false;
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        (window as any).ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      }
+    };
+  }, [ready, authenticated, user, setWalletAddress]);
+
+  // Debug log state changes
+  useEffect(() => {
+    console.log('AuthProvider state:', {
+      ready,
+      authenticated,
+      userWallet: user?.wallet?.address,
+      storeWallet: useWalletStore.getState().walletAddress
+    });
+  }, [ready, authenticated, user?.wallet?.address]);
+
+  return <>{children}</>;
 }

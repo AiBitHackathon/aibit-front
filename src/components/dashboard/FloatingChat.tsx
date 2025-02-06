@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useWalletStore } from "../../stores/walletStore";
 
 interface Message {
   id: string;
@@ -8,11 +9,15 @@ interface Message {
 }
 
 interface FloatingChatProps {
-  healthData?: any;
-  walletAddress?: string | null;
+  healthData: any;
+  onClose: () => void;
 }
 
-export default function FloatingChat({ healthData, walletAddress }: FloatingChatProps) {
+export default function FloatingChat({
+  healthData,
+  onClose,
+}: FloatingChatProps) {
+  const { walletAddress } = useWalletStore();
   const [isOpen, setIsOpen] = useState(true); // Start maximized
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -20,7 +25,7 @@ export default function FloatingChat({ healthData, walletAddress }: FloatingChat
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("FloatingChat received wallet address:", walletAddress);
+    console.log("FloatingChat using wallet address:", walletAddress);
   }, [walletAddress]);
 
   // Format wallet address for display in UI only
@@ -29,8 +34,9 @@ export default function FloatingChat({ healthData, walletAddress }: FloatingChat
     : null;
 
   // Format wallet address for AI context
-  const formatWalletForAI = (address: string) => {
-    const prefix = address.startsWith('0x') ? '' : '0x';
+  const formatWalletForAI = (address: string | null) => {
+    if (!address) return null;
+    const prefix = address.startsWith("0x") ? "" : "0x";
     return prefix + address;
   };
 
@@ -66,33 +72,32 @@ export default function FloatingChat({ healthData, walletAddress }: FloatingChat
         throw new Error("No access token found. Please log in again.");
       }
 
-      const fullWalletAddress = walletAddress ? formatWalletForAI(walletAddress) : null;
-
       const formattedData = {
         message: input.trim(),
         context: {
           // Health data context
           steps: healthData?.activity?.summary?.steps,
-          activeMinutes: (healthData?.activity?.summary?.fairlyActiveMinutes || 0) +
+          activeMinutes:
+            (healthData?.activity?.summary?.fairlyActiveMinutes || 0) +
             (healthData?.activity?.summary?.veryActiveMinutes || 0),
           distance: healthData?.activity?.summary?.distances?.[0]?.distance,
           calories: healthData?.activity?.summary?.caloriesOut,
           sleepDuration: healthData?.sleep?.sleep?.[0]?.minutesAsleep,
           sleepEfficiency: healthData?.sleep?.sleep?.[0]?.efficiency,
-          
+
           // Wallet context
-          userWalletAddress: fullWalletAddress,
+          userWalletAddress: formatWalletForAI(walletAddress),
           isWalletConnected: !!walletAddress,
           canShowWalletAddress: true,
           walletType: "ethereum",
-          showFullAddress: true, // Flag to tell AI to show full address
+          showFullAddress: true,
         },
         accessToken: tokens.access_token,
       };
 
       console.log("Sending to AI - Context:", {
         ...formattedData.context,
-        message: input.trim()
+        message: input.trim(),
       });
 
       const response = await fetch(

@@ -6,20 +6,91 @@ import StepsHistory from "../components/dashboard/StepsHistory";
 import WorkoutHistory from "../components/dashboard/WorkoutHistory";
 import FloatingChat from "../components/dashboard/FloatingChat";
 import AIAnalysis from "../components/dashboard/AIAnalysis";
+import { useWalletStore } from "../stores/walletStore";
 
 const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export default function HealthDashboard() {
   const { ready, authenticated, user } = usePrivy();
-  const [walletAddress, setWalletAddress] = useState<string>("0x4B02789134C78fb37c2F3f38377A6289797119e6");
+  const { walletAddress, setWalletAddress } = useWalletStore();
   const [healthData, setHealthData] = useState<any>(null);
   const [fitbitId, setFitbitId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
 
+  // Initialize wallet address as soon as Privy is ready
   useEffect(() => {
-    console.log("Using wallet address:", walletAddress);
+    const initWallet = async () => {
+      if (!ready) {
+        console.log('Privy not ready yet');
+        return;
+      }
+
+      try {
+        // Try to get wallet from eth_accounts directly
+        const provider = (window as any).ethereum;
+        if (provider) {
+          const accounts = await provider.request({ method: 'eth_accounts' });
+          console.log('Got accounts from provider:', accounts);
+          if (accounts && accounts[0]) {
+            console.log('Setting wallet address from provider:', accounts[0]);
+            setWalletAddress(accounts[0]);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error getting accounts from provider:', error);
+      }
+    };
+
+    initWallet();
+  }, [ready, setWalletAddress]);
+
+  // Get user's wallet address from Privy when authenticated
+  useEffect(() => {
+    const getWalletAddress = async () => {
+      console.log('Checking wallet address...', { ready, authenticated, user });
+      
+      if (ready && authenticated && user) {
+        try {
+          // First try user.wallet.address
+          console.log('Checking user.wallet:', user.wallet);
+          if (user.wallet?.address) {
+            console.log("Got wallet address from user.wallet:", user.wallet.address);
+            setWalletAddress(user.wallet.address);
+            return;
+          }
+
+          // Then try getEthereumAccounts
+          console.log('Trying getEthereumAccounts...');
+          const wallets = await user.getEthereumAccounts();
+          console.log("Got ethereum accounts:", wallets);
+          const primaryWallet = wallets[0];
+          if (primaryWallet?.address) {
+            console.log("Got wallet address from getEthereumAccounts:", primaryWallet.address);
+            setWalletAddress(primaryWallet.address);
+            return;
+          }
+
+          console.warn("No wallet address found in Privy");
+        } catch (error) {
+          console.error("Error getting wallet address from Privy:", error);
+        }
+      } else {
+        console.log('Not ready to get wallet:', { ready, authenticated, user });
+      }
+    };
+
+    getWalletAddress();
+  }, [ready, authenticated, user, setWalletAddress]);
+
+  // Log whenever wallet address changes
+  useEffect(() => {
+    console.log("Current wallet state:", {
+      address: walletAddress,
+      storeAddress: useWalletStore.getState().walletAddress
+    });
   }, [walletAddress]);
 
   const handleLogout = async () => {
@@ -202,7 +273,12 @@ export default function HealthDashboard() {
             />
 
             {/* Floating Chat */}
-            {showChat && <FloatingChat healthData={healthData} walletAddress={walletAddress} />}
+            {showChat && (
+              <FloatingChat
+                healthData={healthData}
+                walletAddress={walletAddress}
+              />
+            )}
           </div>
         )
       )}

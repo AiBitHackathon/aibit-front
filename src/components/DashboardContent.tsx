@@ -1,94 +1,23 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { usePrivy } from "@privy-io/react-auth";
-
-interface HealthData {
-  steps: number;
-  activeMinutes: number;
-  distance: number;
-  calories: number;
-}
+import { useWalletStore } from "../stores/walletStore";
+import HealthDashboard from "./HealthDashboard";
 
 export default function DashboardContent() {
-  const { authenticated, user, logout } = usePrivy();
-  const [healthData, setHealthData] = React.useState<HealthData | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  useEffect(() => {
-    console.log("DashboardContent mounted, user:", user);
-    console.log("Authenticated:", authenticated);
-    console.log("User wallet:", user?.wallet);
-    console.log("PRIVY USER:", user);
-
-    // Redirect if not authenticated or the wallet isn't present
-    if (!authenticated || !user?.wallet) {
-      window.location.href = "/";
-      return;
-    }
-
-    // Store wallet address in localStorage when available
-    if (user?.wallet?.address) {
-      const address = user.wallet.address;
-      console.log("Found wallet address:", address);
-      localStorage.setItem("walletAddress", address);
-      // Verify it was stored
-      const stored = localStorage.getItem("walletAddress");
-      console.log("Verified stored wallet address:", stored);
-    } else {
-      console.warn("No wallet address available to store in localStorage");
-      console.log("User object:", user);
-    }
-
-    const getAccounts = async () => {
-      if (user) {
-        const accounts = await user.getEthereumAccounts();
-        console.log("ETH ACCOUNTS:", accounts);
-      }
-    };
-    getAccounts();
-
-    const fetchData = async () => {
-      try {
-        const API_URL = import.meta.env.PUBLIC_API_URL;
-        const response = await fetch(`${API_URL}/api/health-data`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("fitbit_tokens")}`,
-            "X-Wallet-Address": user.wallet.address,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch health data");
-        }
-
-        const data = await response.json();
-        console.log("Fetched health data:", data);
-        setHealthData(data);
-      } catch (error) {
-        console.error("Error fetching health data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [authenticated, user]);
+  const { user, authenticated, logout } = usePrivy();
+  const { setWalletAddress } = useWalletStore();
 
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem("fitbit_tokens");
-      window.location.href = "/";
+      setWalletAddress(null); // Clear wallet on logout
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9]" />
-      </div>
-    );
+  if (!authenticated) {
+    return null;
   }
 
   return (
@@ -98,10 +27,12 @@ export default function DashboardContent() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Your Health Dashboard
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Wallet: {user?.wallet.address.slice(0, 6)}...
-            {user?.wallet.address.slice(-4)}
-          </p>
+          {user?.wallet?.address && (
+            <p className="text-sm text-gray-600 mt-1">
+              Wallet: {user.wallet.address.slice(0, 6)}...
+              {user.wallet.address.slice(-4)}
+            </p>
+          )}
         </div>
         <button
           onClick={handleLogout}
@@ -125,48 +56,8 @@ export default function DashboardContent() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <h2 className="text-lg sm:text-xl font-semibold p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-white border-b">
-            Today's Activity
-          </h2>
-          <div className="grid grid-cols-2 divide-x divide-gray-100">
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div className="text-sm font-medium text-gray-500">Steps</div>
-                <div className="mt-1 text-2xl sm:text-3xl font-bold text-blue-600">
-                  {healthData?.steps || "-"}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Active Minutes
-                </div>
-                <div className="mt-1 text-xl sm:text-2xl font-semibold">
-                  {healthData?.activeMinutes || "-"}
-                </div>
-              </div>
-            </div>
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Distance
-                </div>
-                <div className="mt-1 text-xl sm:text-2xl font-semibold">
-                  {healthData?.distance ? `${healthData.distance} km` : "-"}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Calories Burned
-                </div>
-                <div className="mt-1 text-xl sm:text-2xl font-semibold text-orange-500">
-                  {healthData?.calories || "-"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div className="grid grid-cols-1 gap-6 sm:gap-8">
+        <HealthDashboard />
       </div>
     </div>
   );
