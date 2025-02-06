@@ -1,0 +1,173 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Get current page from URL query parameter
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const itemsPerPage = 10;
+
+const response = await fetch('http://localhost:3001/get-leaderboard');
+const data = await response.json();
+const leaderboard = data.leaderboard;
+
+// Calculate pagination
+const totalPages = Math.ceil(leaderboard.length / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const endIndex = startIndex + itemsPerPage;
+const currentItems = leaderboard.slice(startIndex, endIndex);
+
+// Calculate global ranks for current page items
+const ranks = currentItems.map((_, index) => startIndex + index + 1);
+---
+
+<Layout title="AIbit - Leaderboard">
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      {/* Navigation */}
+      <nav class="mb-8">
+        <a
+          href="/"
+          class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+        >
+          <svg
+            class="mr-2 h-5 w-5 text-gray-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Back to Dashboard
+        </a>
+      </nav>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">🏆 Fitness Streaks Leaderboard</h1>
+        <p class="text-gray-600 mb-6">Top performers maintaining their fitness goals</p>
+
+        <div class="overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">NFT Status</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {currentItems.map((user, index) => (
+                <tr class={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {ranks[index] === 1 && <span class="text-2xl">🥇</span>}
+                    {ranks[index] === 2 && <span class="text-2xl">🥈</span>}
+                    {ranks[index] === 3 && <span class="text-2xl">🥉</span>}
+                    {ranks[index] > 3 && <span class="text-gray-900 font-medium">#{ranks[index]}</span>}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 flex-shrink-0">
+                        <img
+                          class="h-10 w-10 rounded-full"
+                          src={`https://api.dicebear.com/7.x/shapes/svg?seed=${user.fitbitid}`}
+                          alt=""
+                        />
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          {user.fitbitid}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm text-gray-900 font-semibold">Level {user.level}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <span class={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                      ${user.level >= 8 ? 'bg-green-100 text-green-800' : 
+                        user.level >= 5 ? 'bg-blue-100 text-blue-800' : 
+                        'bg-gray-100 text-gray-800'}`}>
+                      {user.level >= 8 ? 'Diamond' : 
+                        user.level >= 5 ? 'Gold' : 
+                        'Silver'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+            <div class="flex justify-between w-full">
+              <div>
+                <p class="text-sm text-gray-700">
+                  Showing <span class="font-medium">{startIndex + 1}</span> to{" "}
+                  <span class="font-medium">{Math.min(endIndex, leaderboard.length)}</span> of{" "}
+                  <span class="font-medium">{leaderboard.length}</span> results
+                </p>
+              </div>
+              <div class="flex space-x-2">
+                <a
+                  href={currentPage > 1 ? `?page=${currentPage - 1}` : '#'}
+                  class={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                    ${currentPage > 1 
+                      ? 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <a
+                  href={currentPage < totalPages ? `?page=${currentPage + 1}` : '#'}
+                  class={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                    ${currentPage < totalPages
+                      ? 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">About NFT Levels</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-lg bg-gray-50">
+            <div class="flex items-center mb-2">
+              <span class="w-3 h-3 rounded-full bg-gray-400 mr-2"></span>
+              <h3 class="font-semibold">Silver NFT</h3>
+            </div>
+            <p class="text-sm text-gray-600">Level 1-4: Starting your fitness journey</p>
+          </div>
+          <div class="p-4 rounded-lg bg-blue-50">
+            <div class="flex items-center mb-2">
+              <span class="w-3 h-3 rounded-full bg-blue-400 mr-2"></span>
+              <h3 class="font-semibold">Gold NFT</h3>
+            </div>
+            <p class="text-sm text-gray-600">Level 5-7: Consistent goal achiever</p>
+          </div>
+          <div class="p-4 rounded-lg bg-green-50">
+            <div class="flex items-center mb-2">
+              <span class="w-3 h-3 rounded-full bg-green-400 mr-2"></span>
+              <h3 class="font-semibold">Diamond NFT</h3>
+            </div>
+            <p class="text-sm text-gray-600">Level 8+: Elite fitness streak master</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
