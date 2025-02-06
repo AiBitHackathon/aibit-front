@@ -1,5 +1,5 @@
-import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import React, { useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface HealthData {
   steps: number;
@@ -13,30 +13,58 @@ export default function DashboardContent() {
   const [healthData, setHealthData] = React.useState<HealthData | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    console.log("DashboardContent mounted, user:", user);
+    console.log("Authenticated:", authenticated);
+    console.log("User wallet:", user?.wallet);
+    console.log("PRIVY USER:", user);
+
+    // Redirect if not authenticated or the wallet isn't present
     if (!authenticated || !user?.wallet) {
-      window.location.href = '/';
+      window.location.href = "/";
       return;
     }
+
+    // Store wallet address in localStorage when available
+    if (user?.wallet?.address) {
+      const address = user.wallet.address;
+      console.log("Found wallet address:", address);
+      localStorage.setItem("walletAddress", address);
+      // Verify it was stored
+      const stored = localStorage.getItem("walletAddress");
+      console.log("Verified stored wallet address:", stored);
+    } else {
+      console.warn("No wallet address available to store in localStorage");
+      console.log("User object:", user);
+    }
+
+    const getAccounts = async () => {
+      if (user) {
+        const accounts = await user.getEthereumAccounts();
+        console.log("ETH ACCOUNTS:", accounts);
+      }
+    };
+    getAccounts();
 
     const fetchData = async () => {
       try {
         const API_URL = import.meta.env.PUBLIC_API_URL;
         const response = await fetch(`${API_URL}/api/health-data`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('fitbit_tokens')}`,
-            'X-Wallet-Address': user.wallet.address
-          }
+            Authorization: `Bearer ${localStorage.getItem("fitbit_tokens")}`,
+            "X-Wallet-Address": user.wallet.address,
+          },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch health data');
+          throw new Error("Failed to fetch health data");
         }
 
         const data = await response.json();
+        console.log("Fetched health data:", data);
         setHealthData(data);
       } catch (error) {
-        console.error('Error fetching health data:', error);
+        console.error("Error fetching health data:", error);
       } finally {
         setLoading(false);
       }
@@ -48,10 +76,10 @@ export default function DashboardContent() {
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem('fitbit_tokens');
-      window.location.href = '/';
+      localStorage.removeItem("fitbit_tokens");
+      window.location.href = "/";
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Error logging out:", error);
     }
   };
 
@@ -67,17 +95,31 @@ export default function DashboardContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="flex justify-between items-center mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Health Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Your Health Dashboard
+          </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Wallet: {user?.wallet.address.slice(0, 6)}...{user?.wallet.address.slice(-4)}
+            Wallet: {user?.wallet.address.slice(0, 6)}...
+            {user?.wallet.address.slice(-4)}
           </p>
         </div>
         <button
           onClick={handleLogout}
           className="text-sm bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2 transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
           </svg>
           Logout
         </button>
@@ -93,27 +135,33 @@ export default function DashboardContent() {
               <div>
                 <div className="text-sm font-medium text-gray-500">Steps</div>
                 <div className="mt-1 text-2xl sm:text-3xl font-bold text-blue-600">
-                  {healthData?.steps || '-'}
+                  {healthData?.steps || "-"}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-500">Active Minutes</div>
+                <div className="text-sm font-medium text-gray-500">
+                  Active Minutes
+                </div>
                 <div className="mt-1 text-xl sm:text-2xl font-semibold">
-                  {healthData?.activeMinutes || '-'}
+                  {healthData?.activeMinutes || "-"}
                 </div>
               </div>
             </div>
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div>
-                <div className="text-sm font-medium text-gray-500">Distance</div>
+                <div className="text-sm font-medium text-gray-500">
+                  Distance
+                </div>
                 <div className="mt-1 text-xl sm:text-2xl font-semibold">
-                  {healthData?.distance ? `${healthData.distance} km` : '-'}
+                  {healthData?.distance ? `${healthData.distance} km` : "-"}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-500">Calories Burned</div>
+                <div className="text-sm font-medium text-gray-500">
+                  Calories Burned
+                </div>
                 <div className="mt-1 text-xl sm:text-2xl font-semibold text-orange-500">
-                  {healthData?.calories || '-'}
+                  {healthData?.calories || "-"}
                 </div>
               </div>
             </div>

@@ -10,12 +10,17 @@ import AIAnalysis from "../components/dashboard/AIAnalysis";
 const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export default function HealthDashboard() {
-  const { ready, authenticated, user, logout } = usePrivy();
+  const { ready, authenticated, user } = usePrivy();
+  const [walletAddress, setWalletAddress] = useState<string>("0x4B02789134C78fb37c2F3f38377A6289797119e6");
   const [healthData, setHealthData] = useState<any>(null);
   const [fitbitId, setFitbitId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
+
+  useEffect(() => {
+    console.log("Using wallet address:", walletAddress);
+  }, [walletAddress]);
 
   const handleLogout = async () => {
     try {
@@ -197,7 +202,7 @@ export default function HealthDashboard() {
             />
 
             {/* Floating Chat */}
-            {showChat && <FloatingChat healthData={healthData} />}
+            {showChat && <FloatingChat healthData={healthData} walletAddress={walletAddress} />}
           </div>
         )
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface Message {
   id: string;
@@ -9,14 +9,34 @@ interface Message {
 
 interface FloatingChatProps {
   healthData?: any;
+  walletAddress?: string | null;
 }
 
-export default function FloatingChat({ healthData }: FloatingChatProps) {
+export default function FloatingChat({ healthData, walletAddress }: FloatingChatProps) {
   const [isOpen, setIsOpen] = useState(true); // Start maximized
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    console.log("FloatingChat received wallet address:", walletAddress);
+  }, [walletAddress]);
+
+  // Format wallet address for display in UI only
+  const formattedWalletAddress = walletAddress
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+    : null;
+
+  // Format wallet address for AI context
+  const formatWalletForAI = (address: string) => {
+    const prefix = address.startsWith('0x') ? '' : '0x';
+    return prefix + address;
+  };
+
+  useEffect(() => {
+    console.log("FloatingChat wallet display:", formattedWalletAddress);
+  }, [formattedWalletAddress]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,20 +66,34 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
         throw new Error("No access token found. Please log in again.");
       }
 
+      const fullWalletAddress = walletAddress ? formatWalletForAI(walletAddress) : null;
+
       const formattedData = {
         message: input.trim(),
         context: {
+          // Health data context
           steps: healthData?.activity?.summary?.steps,
-          activeMinutes:
-            healthData?.activity?.summary?.fairlyActiveMinutes +
-            healthData?.activity?.summary?.veryActiveMinutes,
+          activeMinutes: (healthData?.activity?.summary?.fairlyActiveMinutes || 0) +
+            (healthData?.activity?.summary?.veryActiveMinutes || 0),
           distance: healthData?.activity?.summary?.distances?.[0]?.distance,
           calories: healthData?.activity?.summary?.caloriesOut,
           sleepDuration: healthData?.sleep?.sleep?.[0]?.minutesAsleep,
           sleepEfficiency: healthData?.sleep?.sleep?.[0]?.efficiency,
+          
+          // Wallet context
+          userWalletAddress: fullWalletAddress,
+          isWalletConnected: !!walletAddress,
+          canShowWalletAddress: true,
+          walletType: "ethereum",
+          showFullAddress: true, // Flag to tell AI to show full address
         },
         accessToken: tokens.access_token,
       };
+
+      console.log("Sending to AI - Context:", {
+        ...formattedData.context,
+        message: input.trim()
+      });
 
       const response = await fetch(
         `${import.meta.env.PUBLIC_API_URL}/api/chat`,
@@ -79,10 +113,8 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
 
       const data = await response.json();
 
-      // Clean the response to remove thinking output
-      const cleanResponse = (response: string) => {
-        // Remove <think>...</think> blocks
-        return response.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+      const cleanResponse = (responseText: string) => {
+        return responseText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
       };
 
       const assistantMessage: Message = {
@@ -108,7 +140,7 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -154,6 +186,11 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
               Ask about your health metrics, get personalized advice, or earn
               rewards
             </p>
+            {formattedWalletAddress && (
+              <p className="text-xs text-gray-500 mt-1">
+                Wallet: {formattedWalletAddress}
+              </p>
+            )}
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -274,14 +311,14 @@ export default function FloatingChat({ healthData }: FloatingChatProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
+        {/* Input Section */}
         <div className="p-4 border-t">
           <div className="flex items-center space-x-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-[#00B0B9]"
               disabled={loading}
