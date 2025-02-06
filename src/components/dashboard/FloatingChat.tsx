@@ -22,7 +22,159 @@ export default function FloatingChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fitbitId, setFitbitId] = useState<string | null>(null);
+  const [hasUserMessage, setHasUserMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const API_URL = import.meta.env.PUBLIC_API_URL;
+
+  // Fetch Fitbit ID on mount
+  useEffect(() => {
+    const fetchFitbitId = async () => {
+      try {
+        const tokens = JSON.parse(localStorage.getItem("fitbit_tokens") || "{}");
+        if (!tokens.access_token) {
+          console.log("No Fitbit access token found");
+          // Don't show message immediately, let user see examples first
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/fitbit/profile`, {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
+
+        if (res.ok) {
+          const profileData = await res.json();
+          const id = profileData.user?.encodedId;
+          console.log("Got Fitbit ID:", id);
+
+          if (id) {
+            setFitbitId(id);
+            checkNillionDatabase(id);
+          } else {
+            console.log("No encoded ID found in profile");
+            throw new Error("No Fitbit ID found in profile");
+          }
+        } else {
+          console.error("Failed to fetch Fitbit profile");
+          throw new Error("Failed to fetch Fitbit profile");
+        }
+      } catch (error) {
+        console.error("Error fetching Fitbit ID:", error);
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          type: "assistant",
+          content:
+            "I couldn't access your Fitbit profile. Please make sure you're logged in to Fitbit and try again.",
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    };
+
+    if (walletAddress) {
+      // Only fetch if wallet is connected
+      fetchFitbitId();
+    }
+  }, [walletAddress]); // Re-run when wallet address changes
+
+  // Check Nillion database for existing user
+  const checkNillionDatabase = async (fitbitId: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/get-latest-nft?fitbitid=${fitbitId}`
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log("User not found in Nillion, creating account...");
+          await createNillionAccount(fitbitId);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Found existing user in Nillion:", data);
+      const welcomeBack: Message = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: `Welcome back! You're currently at Level ${data.level}. Keep up the great work! 💪`,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, welcomeBack]);
+    } catch (error) {
+      console.error("Error checking Nillion database:", error);
+      // Only create account if we got a 404 (user not found)
+      if (error.message?.includes("404")) {
+        await createNillionAccount(fitbitId);
+      } else {
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          type: "assistant",
+          content:
+            "I had trouble checking your account status. Please try again later.",
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    }
+  };
+
+  // Create new user account in Nillion
+  const createNillionAccount = async (fitbitId: string) => {
+    try {
+      // Format date as YYMMDDHHMM00
+      const now = new Date();
+      const dateString =
+        now.getFullYear().toString().slice(-2) + // YY
+        (now.getMonth() + 1).toString().padStart(2, "0") + // MM
+        now.getDate().toString().padStart(2, "0") + // DD
+        now.getHours().toString().padStart(2, "0") + // HH
+        now.getMinutes().toString().padStart(2, "0") + // MM
+        "00"; // Fixed suffix
+
+      const response = await fetch("http://localhost:3001/add-nft-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fitbitid: fitbitId,
+          dateofupdate: dateString,
+          level: "1", // Start at level 1
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Nillion response:", data);
+
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content:
+          "I've created your account in our secure Nillion database! You're starting at Level 1. Complete your daily fitness goals to level up and earn NFTs! 🎮🏃‍♂️",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, newMessage]);
+    } catch (error) {
+      console.error("Error creating Nillion account:", error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content:
+          "I encountered an error while setting up your account. Please try again later.",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
 
   useEffect(() => {
     console.log("FloatingChat using wallet address:", walletAddress);
@@ -55,6 +207,20 @@ export default function FloatingChat({
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
+    // Check if Fitbit is connected before proceeding
+    const tokens = JSON.parse(localStorage.getItem("fitbit_tokens") || "{}");
+    if (!tokens.access_token) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: "Please connect your Fitbit account first to start tracking your fitness journey!",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    setHasUserMessage(true);
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -220,7 +386,7 @@ export default function FloatingChat({
 
         {/* Messages */}
         <div className="h-96 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
+          {!hasUserMessage && (
             <div className="space-y-3 text-gray-600">
               <p className="font-medium">
                 Ask me specific questions about your health data:
