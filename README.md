@@ -26,7 +26,7 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 ## 🛠 Technology Stack
 
 - **Frontend**: Astro + React
-- **AI Services**: 
+- **AI Services**:
   - Venice AI for intelligent health insights and goal management
   - Coinbase AgentKit for CDP-based agent interactions
   - Memory system for contextual interactions
@@ -40,6 +40,7 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 ## 🗺 Roadmap
 
 ### Phase 1: Core Platform (Completed)
+
 - ✅ Fitbit integration
 - ✅ Basic health metrics dashboard
 - ✅ AI-powered health assistant
@@ -48,24 +49,28 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 - ✅ CDP-based AI agent implementation
 
 ### Phase 2: Enhanced AI Features (Current)
+
 - ✅ Context-aware AI conversations
 - ✅ Memory system for personalized interactions
 - 🔄 Advanced goal tracking algorithms
 - 🔄 Predictive health insights
 
 ### Phase 3: Dynamic NFT Rewards (In Progress)
+
 - 🔄 Implementation of dynamic NFTs on Arbitrum
 - 🔄 NFT attributes tied to fitness achievements
 - 🔄 Visual evolution based on streak maintenance
 - 🔄 Special edition NFTs for major milestones
 
 ### Phase 4: Social Features (Upcoming)
+
 - 📅 Global leaderboard for activity streaks
 - 📅 Friend challenges and competitions
 - 📅 Community achievements
 - 📅 Social sharing of milestones
 
 ### Phase 5: Advanced Privacy & AI (Future)
+
 - 📋 Enhanced Nillion integrations
 - 📋 Multi-chain support
 - 📋 Advanced AI prediction models
@@ -75,19 +80,24 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
+
 3. Set up environment variables:
+
    ```bash
    cp .env.example .env
    ```
+
 4. Configure your API keys for:
    - Venice AI
    - Privy
    - Fitbit API
    - Nillion
 5. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -95,7 +105,6 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
 
 ## 🔗 Links
 
