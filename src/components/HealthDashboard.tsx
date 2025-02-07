@@ -6,6 +6,7 @@ import StepsHistory from "../components/dashboard/StepsHistory";
 import WorkoutHistory from "../components/dashboard/WorkoutHistory";
 import FloatingChat from "../components/dashboard/FloatingChat";
 import AIAnalysis from "../components/dashboard/AIAnalysis";
+import NFTDisplay from "../components/dashboard/NFTDisplay";
 import { useWalletStore } from "../stores/walletStore";
 
 // If PUBLIC_API_URL is undefined, default to a relative URL.
@@ -253,27 +254,29 @@ export default function HealthDashboard() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
-
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B0B9]"></div>
         </div>
+      ) : error ? (
+        <div className="text-red-500 text-center p-4">{error}</div>
       ) : (
         healthData && (
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <ActivitySection healthData={healthData} />
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <SleepSection healthData={healthData} />
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <NFTDisplay walletAddress={walletAddress} />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-4 border rounded-lg shadow">
-                <ActivitySection data={healthData?.activity} />
-              </div>
-              <div className="bg-white p-4 border rounded-lg shadow">
-                <SleepSection data={healthData?.sleep} />
-              </div>
-              <div className="bg-white p-4 border rounded-lg shadow">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
                 <StepsHistory
                   accessToken={
                     JSON.parse(localStorage.getItem("fitbit_tokens") || "{}")
@@ -281,15 +284,19 @@ export default function HealthDashboard() {
                   }
                 />
               </div>
-              <div className="bg-white p-4 border rounded-lg shadow">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
                 <WorkoutHistory data={healthData?.workouts?.activities || []} />
               </div>
             </div>
-            <AIAnalysis
-              healthData={healthData}
-              onRefreshData={fetchData}
-              onAnalysisComplete={handleAnalysisComplete}
-            />
+
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <AIAnalysis
+                healthData={healthData}
+                onRefreshData={fetchData}
+                onAnalysisComplete={handleAnalysisComplete}
+                className="mt-6"
+              />
+            </div>
             {showChat && (
               <FloatingChat
                 healthData={healthData}

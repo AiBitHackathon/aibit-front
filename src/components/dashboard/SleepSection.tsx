@@ -1,64 +1,60 @@
 import React from "react";
 
 interface SleepSectionProps {
-  data?: {
-    sleep?: Array<{
-      duration: number;
-      efficiency: number;
-      levels?: {
-        summary?: {
-          deep?: {
-            minutes: number;
-          };
-          rem?: {
-            minutes: number;
-          };
-        };
-      };
-    }>;
-  };
+  healthData: any;
 }
 
-export default function SleepSection({ data }: SleepSectionProps) {
-  const sleep = data?.sleep?.[0];
-  const duration = sleep?.duration ? sleep.duration / 3600000 : 8.3; // Convert from milliseconds to hours
-  const deepSleep = sleep?.levels?.summary?.deep?.minutes ?? 72; // 1.2 hours in minutes
-  const remSleep = sleep?.levels?.summary?.rem?.minutes ?? 96; // 1.6 hours in minutes
+export default function SleepSection({ healthData }: SleepSectionProps) {
+  const data = healthData?.sleep;
+  const latestSleep = data?.sleep?.[0];
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-100">
-      <h2 className="text-lg font-semibold p-3 bg-gradient-to-r from-indigo-50 to-white border-b">
+    <div className="bg-white rounded-xl p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
         😴 Last Night's Sleep
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-3">
-        <div className="p-2">
-          <div className="text-sm text-gray-500">⏰ Duration</div>
-          <div className="text-xl font-bold text-indigo-600">
-            {`${duration.toFixed(1)}h`}
+      <div className="grid grid-cols-2 gap-y-6">
+        <div className="flex flex-col">
+          <div className="text-blue-600 text-sm mb-1">⏰ Duration</div>
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold mr-2">
+              {latestSleep?.duration ? (latestSleep.duration / 3600000).toFixed(1) : "-"}
+            </span>
+            <span className="text-gray-600 text-lg">h</span>
           </div>
         </div>
-
-        <div className="p-2">
-          <div className="text-sm text-gray-500">📈 Efficiency</div>
-          <div className="text-xl font-semibold">
-            {sleep?.efficiency ? `${sleep.efficiency}%` : "98%"}
+        <div className="flex flex-col">
+          <div className="text-blue-600 text-sm mb-1">📈 Efficiency</div>
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold mr-2">
+              {latestSleep?.efficiency || "-"}
+            </span>
+            <span className="text-gray-600 text-lg">%</span>
           </div>
         </div>
-
-        <div className="p-2">
-          <div className="text-sm text-gray-500">💫 Deep Sleep</div>
-          <div className="text-xl font-semibold">
-            {`${(deepSleep / 60).toFixed(1)}h`}
+        <div className="flex flex-col">
+          <div className="text-blue-600 text-sm mb-1">💫 Deep Sleep</div>
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold mr-2">
+              {latestSleep?.levels?.summary?.deep?.minutes
+                ? (latestSleep.levels.summary.deep.minutes / 60).toFixed(1)
+                : "-"}
+            </span>
+            <span className="text-gray-600 text-lg">h</span>
           </div>
         </div>
-
-        <div className="p-2">
-          <div className="text-sm text-gray-500">🌙 REM Sleep</div>
-          <div className="text-xl font-semibold">
-            {`${(remSleep / 60).toFixed(1)}h`}
+        <div className="flex flex-col">
+          <div className="text-blue-600 text-sm mb-1">🌙 REM Sleep</div>
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold mr-2">
+              {latestSleep?.levels?.summary?.rem?.minutes
+                ? (latestSleep.levels.summary.rem.minutes / 60).toFixed(1)
+                : "-"}
+            </span>
+            <span className="text-gray-600 text-lg">h</span>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
