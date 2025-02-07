@@ -44,15 +44,18 @@ import Layout from '../layouts/Layout.astro';
       body: JSON.stringify({
         code,
         grant_type: 'authorization_code',
-        redirect_uri: 'https://localhost:8888/callback'
+        redirect_uri: window.location.origin + '/callback'
       })
     })
-    .then(response => {
+    .then(async response => {
+      const responseText = await response.text();
+      debugLog(`Token exchange response: ${response.status} - ${responseText}`);
+      
       if (!response.ok) {
-        debugLog(`Token exchange failed: ${response.status}`);
-        throw new Error('Token exchange failed');
+        throw new Error(`Token exchange failed: ${responseText}`);
       }
-      return response.json();
+      
+      return JSON.parse(responseText);
     })
     .then(data => {
       if (!data.access_token) {

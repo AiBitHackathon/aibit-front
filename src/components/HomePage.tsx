@@ -7,7 +7,6 @@ export default function HomePage() {
   const [isConnectingFitbit, setIsConnectingFitbit] = useState(false);
 
   const FITBIT_CLIENT_ID = import.meta.env.PUBLIC_FITBIT_CLIENT_ID;
-  const REDIRECT_URI = "https://localhost:8888/callback";
   const SCOPE = "activity profile sleep";
 
   const handleFitbitConnect = () => {
@@ -15,13 +14,17 @@ export default function HomePage() {
     const state = Math.random().toString(36).substring(2);
     sessionStorage.setItem("oauth_state", state);
 
+    // Get the current origin for the redirect URI
+    const currentOrigin = window.location.origin;
+    const redirect_uri = `${currentOrigin}/callback`;
+
     // Don't set a return path if we're already on dashboard
     if (window.location.pathname !== "/dashboard") {
       sessionStorage.setItem("oauth_return_path", "/dashboard");
     }
 
     const authUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      "https://localhost:8888/callback"
+      redirect_uri
     )}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;
 
     // Store current page to prevent unwanted redirects

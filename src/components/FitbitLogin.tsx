@@ -10,16 +10,28 @@ export default function FitbitLogin() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fitbitTokens = localStorage.getItem("fitbit_tokens");
-    if (fitbitTokens) {
-      const tokens = JSON.parse(fitbitTokens);
-      const isValid = tokens.expires_at && tokens.expires_at > Date.now();
-      setIsFitbitConnected(isValid);
+    try {
+      const fitbitTokens = localStorage.getItem("fitbit_tokens");
+      if (fitbitTokens) {
+        const tokens = JSON.parse(fitbitTokens);
+        // If you compute expires_at when storing tokens, this check works.
+        // Otherwise you might want to compute expires_at using tokens.expires_in & a stored timestamp.
+        const now = Date.now();
+        if (tokens.expires_at && tokens.expires_at > now) {
+          setIsFitbitConnected(true);
+        } else {
+          setIsFitbitConnected(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing fitbit tokens from localStorage:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const handleFitbitConnect = () => {
+    // Ensure that the connected wallet address exists.
     if (!user?.wallet?.address) {
       console.error("Wallet address not found");
       return;
@@ -28,15 +40,20 @@ export default function FitbitLogin() {
     // Store wallet address for the callback
     sessionStorage.setItem("wallet_address", user.wallet.address);
 
-    // Generate and store state for OAuth
+    // Generate and store a random state for OAuth security
     const state = Math.random().toString(36).substring(2);
     sessionStorage.setItem("oauth_state", state);
 
-    // Redirect to Fitbit auth
+    // Construct the redirect URI using the current origin
+    const currentOrigin = window.location.origin;
+    const redirect_uri = `${currentOrigin}/callback`;
+
+    // Build the Fitbit authorization URL
     const authUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      "https://localhost:8888/callback"
+      redirect_uri
     )}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;
 
+    // Redirect the user to the Fitbit login page
     window.location.href = authUrl;
   };
 
