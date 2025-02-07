@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useWalletStore } from "../../stores/walletStore";
 
 interface AIAnalysisProps {
   healthData: any;
@@ -11,6 +12,7 @@ export default function AIAnalysis({
   onRefreshData,
   onAnalysisComplete,
 }: AIAnalysisProps) {
+  const { walletAddress } = useWalletStore();
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +32,11 @@ export default function AIAnalysis({
         activity: healthData?.activity?.summary || {},
         sleep: healthData?.sleep?.sleep?.[0] || {},
         workouts: healthData?.workouts?.activities || [],
+        userWalletAddress: walletAddress,
+        isWalletConnected: !!walletAddress,
+        canShowWalletAddress: true,
+        walletType: "ethereum",
+        showFullAddress: true,
       };
 
       const response = await fetch(
