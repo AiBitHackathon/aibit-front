@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   integrations: [tailwind(), react()],
   output: "static",
-  site: "https://aibit-front-ic06d.sevalla.com", // Replace with your actual Sevalla domain
+  site: "https://aibit-front.vercel.app", // Replace with your actual Sevalla domain
   base: "/",
   server: {
     port: 8888,

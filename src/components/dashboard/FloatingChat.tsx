@@ -84,7 +84,14 @@ export default function FloatingChat({
   const checkNillionDatabase = async (fitbitId: string) => {
     try {
       const response = await fetch(
-        `https://nillion-pi.vercel.app/get-latest-nft?fitbitid=${fitbitId}`
+        `https://nillion-pi.vercel.app/get-latest-nft?fitbitid=${fitbitId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'fitbitid': fitbitId
+          }
+        }
       );
 
       if (!response.ok) {
