@@ -8,7 +8,8 @@ import FloatingChat from "../components/dashboard/FloatingChat";
 import AIAnalysis from "../components/dashboard/AIAnalysis";
 import { useWalletStore } from "../stores/walletStore";
 
-const API_URL = import.meta.env.PUBLIC_API_URL;
+// If PUBLIC_API_URL is undefined, default to a relative URL.
+const API_URL = import.meta.env.PUBLIC_API_URL || "";
 
 export default function HealthDashboard() {
   const { ready, authenticated, user } = usePrivy();
@@ -23,65 +24,65 @@ export default function HealthDashboard() {
   useEffect(() => {
     const initWallet = async () => {
       if (!ready) {
-        console.log('Privy not ready yet');
+        console.log("Privy not ready yet");
         return;
       }
-
       try {
-        // Try to get wallet from eth_accounts directly
+        // Try to get wallet via injected provider (e.g. MetaMask)
         const provider = (window as any).ethereum;
         if (provider) {
-          const accounts = await provider.request({ method: 'eth_accounts' });
-          console.log('Got accounts from provider:', accounts);
+          const accounts = await provider.request({ method: "eth_accounts" });
+          console.log("Got accounts from provider:", accounts);
           if (accounts && accounts[0]) {
-            console.log('Setting wallet address from provider:', accounts[0]);
+            console.log("Setting wallet address from provider:", accounts[0]);
             setWalletAddress(accounts[0]);
             return;
           }
         }
       } catch (error) {
-        console.error('Error getting accounts from provider:', error);
+        console.error("Error getting accounts from provider:", error);
       }
     };
-
     initWallet();
   }, [ready, setWalletAddress]);
 
   // Get user's wallet address from Privy when authenticated
   useEffect(() => {
     const getWalletAddress = async () => {
-      console.log('Checking wallet address...', { ready, authenticated, user });
-      
+      console.log("Checking wallet address...", { ready, authenticated, user });
       if (ready && authenticated && user) {
         try {
-          // First try user.wallet.address
-          console.log('Checking user.wallet:', user.wallet);
+          // First try user.wallet.address (if provided)
+          console.log("Checking user.wallet:", user.wallet);
           if (user.wallet?.address) {
-            console.log("Got wallet address from user.wallet:", user.wallet.address);
+            console.log(
+              "Got wallet address from user.wallet:",
+              user.wallet.address
+            );
             setWalletAddress(user.wallet.address);
             return;
           }
-
           // Then try getEthereumAccounts
-          console.log('Trying getEthereumAccounts...');
+          console.log("Trying getEthereumAccounts...");
           const wallets = await user.getEthereumAccounts();
           console.log("Got ethereum accounts:", wallets);
           const primaryWallet = wallets[0];
           if (primaryWallet?.address) {
-            console.log("Got wallet address from getEthereumAccounts:", primaryWallet.address);
+            console.log(
+              "Got wallet address from getEthereumAccounts:",
+              primaryWallet.address
+            );
             setWalletAddress(primaryWallet.address);
             return;
           }
-
           console.warn("No wallet address found in Privy");
         } catch (error) {
           console.error("Error getting wallet address from Privy:", error);
         }
       } else {
-        console.log('Not ready to get wallet:', { ready, authenticated, user });
+        console.log("Not ready to get wallet:", { ready, authenticated, user });
       }
     };
-
     getWalletAddress();
   }, [ready, authenticated, user, setWalletAddress]);
 
@@ -89,8 +90,32 @@ export default function HealthDashboard() {
   useEffect(() => {
     console.log("Current wallet state:", {
       address: walletAddress,
-      storeAddress: useWalletStore.getState().walletAddress
+      storeAddress: useWalletStore.getState().walletAddress,
     });
+  }, [walletAddress]);
+
+  // Call the backend NFT endpoint as soon as a wallet address is available.
+  useEffect(() => {
+    if (walletAddress) {
+      console.log("Calling NFT tool with wallet address:", walletAddress);
+      fetch(`${API_URL}/api/nft`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userWalletAddress: walletAddress }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Network response was not OK");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log("NFT tool response:", data);
+        })
+        .catch((err) => console.error("Error calling NFT tool:", err));
+    }
   }, [walletAddress]);
 
   const handleLogout = async () => {
@@ -106,7 +131,6 @@ export default function HealthDashboard() {
     try {
       setLoading(true);
       setError(null);
-
       const tokens = JSON.parse(localStorage.getItem("fitbit_tokens") || "{}");
       if (!tokens.access_token) {
         throw new Error("No access token found. Please log in again.");
@@ -170,13 +194,10 @@ export default function HealthDashboard() {
       if (!tokens.access_token) return;
       try {
         const res = await fetch(`${API_URL}/api/fitbit/profile`, {
-          headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-          },
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
         if (res.ok) {
           const profileData = await res.json();
-          // Assuming the Fitbit ID is stored as the encodedId in profileData.user:
           setFitbitId(profileData.user?.encodedId || null);
         } else {
           console.error("Failed to fetch Fitbit profile");
@@ -188,6 +209,7 @@ export default function HealthDashboard() {
     fetchFitbitProfile();
   }, []);
 
+  // Fetch health data on component load
   useEffect(() => {
     fetchData();
   }, []);
@@ -244,7 +266,6 @@ export default function HealthDashboard() {
       ) : (
         healthData && (
           <div className="space-y-6 sm:space-y-8">
-            {/* Uniform 2×2 Grid Layout for the 4 Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-4 border rounded-lg shadow">
                 <ActivitySection data={healthData?.activity} />
@@ -264,15 +285,11 @@ export default function HealthDashboard() {
                 <WorkoutHistory data={healthData?.workouts?.activities || []} />
               </div>
             </div>
-
-            {/* AI Analysis Section */}
             <AIAnalysis
               healthData={healthData}
               onRefreshData={fetchData}
               onAnalysisComplete={handleAnalysisComplete}
             />
-
-            {/* Floating Chat */}
             {showChat && (
               <FloatingChat
                 healthData={healthData}

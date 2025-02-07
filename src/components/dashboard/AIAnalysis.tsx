@@ -1,3 +1,4 @@
+// AiAnalysis.tsx
 import React, { useState } from "react";
 import { useWalletStore } from "../../stores/walletStore";
 
@@ -28,11 +29,13 @@ export default function AIAnalysis({
         throw new Error("No access token found. Please log in again.");
       }
 
+      // Prepare the data payload. Note that walletAddress is injected as userWalletAddress.
+      // This will be used on the backend (e.g., passed to the tools.checkAndMintNFT function).
       const formattedData = {
         activity: healthData?.activity?.summary || {},
         sleep: healthData?.sleep?.sleep?.[0] || {},
         workouts: healthData?.workouts?.activities || [],
-        userWalletAddress: walletAddress,
+        userWalletAddress: walletAddress, // Wallet address passed for backend tools usage.
         isWalletConnected: !!walletAddress,
         canShowWalletAddress: true,
         walletType: "ethereum",
@@ -52,18 +55,18 @@ export default function AIAnalysis({
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || "Failed to analyze health data");
+        const errorResponse = await response.json();
+        throw new Error(
+          errorResponse.details || "Failed to analyze health data"
+        );
       }
 
       const data = await response.json();
       setAnalysis(data);
       setShowAnalyzeButton(false);
-      onAnalysisComplete(); // Trigger chat visibility in parent
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to analyze data"
-      );
+      onAnalysisComplete(); // Trigger chat or UI update in parent after analysis
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to analyze data");
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,6 @@ export default function AIAnalysis({
     recommendations: string[]
   ) => {
     if (!recommendations || recommendations.length === 0) return null;
-
     return (
       <div className="mb-4">
         <h4 className="font-medium text-blue-900 mb-2">{title}</h4>
@@ -94,7 +96,6 @@ export default function AIAnalysis({
     if (!analysis) return null;
 
     const { evaluation, facts } = analysis;
-
     return (
       <div className="p-6 space-y-8">
         {/* Header */}
@@ -168,9 +169,8 @@ export default function AIAnalysis({
           </div>
         </div>
 
-        {/* Insights Grid - More compact layout for desktop */}
+        {/* Insights Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Achievements Section */}
           {evaluation.achievements?.length > 0 && (
             <div className="bg-green-50 rounded-xl p-6 border border-green-100 h-full">
               <h3 className="text-lg font-semibold text-green-900 mb-4">
@@ -189,7 +189,6 @@ export default function AIAnalysis({
             </div>
           )}
 
-          {/* Areas of Attention Section */}
           {evaluation.concerns?.length > 0 && (
             <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-100 h-full">
               <h3 className="text-lg font-semibold text-yellow-900 mb-4">
@@ -208,7 +207,6 @@ export default function AIAnalysis({
             </div>
           )}
 
-          {/* Recommendations Section */}
           {evaluation.recommendations && (
             <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 h-full md:col-span-2 lg:col-span-1">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">
@@ -247,7 +245,7 @@ export default function AIAnalysis({
 
   return (
     <div className="space-y-6">
-      {/* Analysis Button */}
+      {/* Analysis Button Section */}
       {!analysis && showAnalyzeButton && (
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <button
@@ -280,7 +278,6 @@ export default function AIAnalysis({
               </>
             )}
           </button>
-
           {error && (
             <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg flex items-start gap-2">
               <svg
@@ -302,7 +299,7 @@ export default function AIAnalysis({
         </div>
       )}
 
-      {/* Analysis Results */}
+      {/* Render Analysis Results */}
       {analysis && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
           {/* Header Section */}
@@ -328,10 +325,9 @@ export default function AIAnalysis({
             </div>
           </div>
 
-          {/* Metrics Grid */}
+          {/* Metrics Grid Section */}
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Health Metrics */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   📊 Health Metrics
@@ -355,7 +351,6 @@ export default function AIAnalysis({
                 </div>
               </div>
 
-              {/* Workout Stats */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   💪 Workout Stats
@@ -384,10 +379,9 @@ export default function AIAnalysis({
             </div>
           </div>
 
-          {/* Insights Grid - More compact layout for desktop */}
+          {/* Insights Section */}
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Achievements Section */}
               {analysis.evaluation.achievements?.length > 0 && (
                 <div className="bg-green-50 rounded-xl p-6 border border-green-100 h-full">
                   <h3 className="text-lg font-semibold text-green-900 mb-4">
@@ -408,7 +402,6 @@ export default function AIAnalysis({
                 </div>
               )}
 
-              {/* Areas of Attention Section */}
               {analysis.evaluation.concerns?.length > 0 && (
                 <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-100 h-full">
                   <h3 className="text-lg font-semibold text-yellow-900 mb-4">
@@ -429,7 +422,6 @@ export default function AIAnalysis({
                 </div>
               )}
 
-              {/* Recommendations Section */}
               {analysis.evaluation.recommendations && (
                 <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 h-full md:col-span-2 lg:col-span-1">
                   <h3 className="text-lg font-semibold text-blue-900 mb-4">
