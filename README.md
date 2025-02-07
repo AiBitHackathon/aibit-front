@@ -5,59 +5,71 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 ## 🚀 Features
 
 - **AI-Powered Health Assistant**: Powered by Venice AI, our intelligent assistant provides personalized insights and recommendations based on your health data
+  - CDP (Conversational Decision Process) powered by Coinbase's AgentKit
+  - Context-aware responses with memory of past interactions
+  - Dynamic goal setting and progress tracking
 - **Web3 Integration**: Secure wallet connection through Privy for managing digital assets and rewards
 - **Fitbit Integration**: Real-time synchronization with Fitbit API for comprehensive health metrics:
   - Steps and activity tracking
   - Sleep analysis
   - Workout history
   - Heart rate data
-- **Private Data Storage**: Upcoming integration with Nillion for secure, private storage of sensitive health data
+- **Private Data Storage**: Integrated with Nillion for secure, private storage of sensitive health data
+  - Zero-knowledge proofs for data verification
+  - Secure user account management
+  - Privacy-preserving data analysis
 - **Interactive Dashboard**: Real-time visualization of health metrics and progress
+  - Personalized health insights
+  - Progress tracking with AI analysis
+  - Achievement system with NFT rewards
 
 ## 🛠 Technology Stack
 
 - **Frontend**: Astro + React
 - **AI Services**: 
   - Venice AI for intelligent health insights and goal management
-  - Custom AI agent for personalized goal tracking
+  - Coinbase AgentKit for CDP-based agent interactions
+  - Memory system for contextual interactions
 - **Web3**:
   - Privy for wallet connection and authentication
   - Arbitrum for dynamic NFT rewards
 - **Data Storage & Privacy**:
-  - Nillion (upcoming) for private data storage
+  - Nillion for secure private data storage and verification
   - Fitbit API for health metrics
 
 ## 🗺 Roadmap
 
-### Phase 1: Core Platform (Current)
+### Phase 1: Core Platform (Completed)
 - ✅ Fitbit integration
 - ✅ Basic health metrics dashboard
 - ✅ AI-powered health assistant
 - ✅ Web3 wallet integration
+- ✅ Nillion integration for private data storage
+- ✅ CDP-based AI agent implementation
 
-### Phase 2: AI Goal Management (In Progress)
-- 🔄 AI agent for dynamic goal setting
-- 🔄 Automated progress tracking
-- 🔄 Personalized achievement milestones
-- 🔄 Smart notifications and reminders
+### Phase 2: Enhanced AI Features (Current)
+- ✅ Context-aware AI conversations
+- ✅ Memory system for personalized interactions
+- 🔄 Advanced goal tracking algorithms
+- 🔄 Predictive health insights
 
-### Phase 3: Dynamic NFT Rewards (Upcoming)
-- 📅 Implementation of dynamic NFTs on Arbitrum
-- 📅 NFT attributes tied to fitness achievements
-- 📅 Visual evolution based on streak maintenance
-- 📅 Special edition NFTs for major milestones
+### Phase 3: Dynamic NFT Rewards (In Progress)
+- 🔄 Implementation of dynamic NFTs on Arbitrum
+- 🔄 NFT attributes tied to fitness achievements
+- 🔄 Visual evolution based on streak maintenance
+- 🔄 Special edition NFTs for major milestones
 
-### Phase 4: Social Features (Planned)
-- 📋 Global leaderboard for activity streaks
-- 📋 Friend challenges and competitions
-- 📋 Community achievements
-- 📋 Social sharing of milestones
+### Phase 4: Social Features (Upcoming)
+- 📅 Global leaderboard for activity streaks
+- 📅 Friend challenges and competitions
+- 📅 Community achievements
+- 📅 Social sharing of milestones
 
-### Phase 5: Advanced Privacy (Future)
-- 🔒 Integration with Nillion for private data storage
-- 🔒 Enhanced data encryption
-- 🔒 User-controlled data sharing
-- 🔒 Privacy-preserving analytics
+### Phase 5: Advanced Privacy & AI (Future)
+- 📋 Enhanced Nillion integrations
+- 📋 Multi-chain support
+- 📋 Advanced AI prediction models
+- 📋 Cross-platform data synchronization
 
 ## 🏃‍♂️ Getting Started
 
@@ -74,6 +86,7 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
    - Venice AI
    - Privy
    - Fitbit API
+   - Nillion
 5. Start the development server:
    ```bash
    npm run dev
@@ -83,9 +96,6 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
