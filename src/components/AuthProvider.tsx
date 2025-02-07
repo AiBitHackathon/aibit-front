@@ -18,7 +18,7 @@ export default function AuthProvider({ children }: Props) {
       appId={PRIVY_APP_ID}
       onSuccess={handleLogin}
       config={{
-        loginMethods: ["wallet", "email"],
+        loginMethods: ["google"],
         appearance: {
           theme: "light",
           accentColor: "#00B0B9",
@@ -40,7 +40,11 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
 
     const checkWallet = async () => {
       if (!ready || !authenticated || !user) {
-        console.log('Not ready for wallet check:', { ready, authenticated, user });
+        console.log("Not ready for wallet check:", {
+          ready,
+          authenticated,
+          user,
+        });
         return;
       }
 
@@ -48,10 +52,10 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
         // Try Privy's embedded provider first
         const provider = (window as any).ethereum;
         if (provider) {
-          const accounts = await provider.request({ method: 'eth_accounts' });
-          console.log('Got accounts from provider:', accounts);
+          const accounts = await provider.request({ method: "eth_accounts" });
+          console.log("Got accounts from provider:", accounts);
           if (accounts?.[0] && mounted) {
-            console.log('Setting wallet from provider:', accounts[0]);
+            console.log("Setting wallet from provider:", accounts[0]);
             setWalletAddress(accounts[0]);
             return;
           }
@@ -59,7 +63,7 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
 
         // Then try user.wallet
         if (user.wallet?.address && mounted) {
-          console.log('Setting wallet from user.wallet:', user.wallet.address);
+          console.log("Setting wallet from user.wallet:", user.wallet.address);
           setWalletAddress(user.wallet.address);
           return;
         }
@@ -67,12 +71,15 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
         // Finally try getEthereumAccounts
         const wallets = await user.getEthereumAccounts();
         if (wallets?.[0]?.address && mounted) {
-          console.log('Setting wallet from getEthereumAccounts:', wallets[0].address);
+          console.log(
+            "Setting wallet from getEthereumAccounts:",
+            wallets[0].address
+          );
           setWalletAddress(wallets[0].address);
           return;
         }
       } catch (error) {
-        console.error('Error getting wallet:', error);
+        console.error("Error getting wallet:", error);
       }
     };
 
@@ -82,7 +89,7 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
     // Set up account change listener
     const handleAccountsChanged = (accounts: string[]) => {
       if (!mounted) return;
-      console.log('Accounts changed:', accounts);
+      console.log("Accounts changed:", accounts);
       if (accounts?.[0]) {
         setWalletAddress(accounts[0]);
       } else {
@@ -90,26 +97,29 @@ function WalletHandler({ children }: { children: React.ReactNode }) {
       }
     };
 
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      (window as any).ethereum.on('accountsChanged', handleAccountsChanged);
+    if (typeof window !== "undefined" && (window as any).ethereum) {
+      (window as any).ethereum.on("accountsChanged", handleAccountsChanged);
     }
 
     // Cleanup
     return () => {
       mounted = false;
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
-        (window as any).ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      if (typeof window !== "undefined" && (window as any).ethereum) {
+        (window as any).ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
       }
     };
   }, [ready, authenticated, user, setWalletAddress]);
 
   // Debug log state changes
   useEffect(() => {
-    console.log('AuthProvider state:', {
+    console.log("AuthProvider state:", {
       ready,
       authenticated,
       userWallet: user?.wallet?.address,
-      storeWallet: useWalletStore.getState().walletAddress
+      storeWallet: useWalletStore.getState().walletAddress,
     });
   }, [ready, authenticated, user?.wallet?.address]);
 
