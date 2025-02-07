@@ -95,28 +95,35 @@ export default function HealthDashboard() {
     });
   }, [walletAddress]);
 
-  // Call the backend NFT endpoint as soon as a wallet address is available.
+  // Call the backend NFT endpoint only after we have confirmed the wallet address
   useEffect(() => {
-    if (walletAddress) {
-      console.log("Calling NFT tool with wallet address:", walletAddress);
-      fetch(`${API_URL}/api/nft`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userWalletAddress: walletAddress }),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Network response was not OK");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("NFT tool response:", data);
-        })
-        .catch((err) => console.error("Error calling NFT tool:", err));
-    }
+    const callNFTEndpoint = async () => {
+      if (!walletAddress) {
+        console.log("No wallet address available for NFT call");
+        return;
+      }
+
+      try {
+        console.log("Calling NFT tool with wallet address:", walletAddress);
+        const response = await fetch(`${API_URL}/api/nft`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userWalletAddress: walletAddress }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Network response was not OK");
+        }
+        const data = await response.json();
+        console.log("NFT tool response:", data);
+      } catch (err) {
+        console.error("Error calling NFT tool:", err);
+      }
+    };
+
+    callNFTEndpoint();
   }, [walletAddress]);
 
   const handleLogout = async () => {
