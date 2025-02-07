@@ -84,7 +84,7 @@ export default function FloatingChat({
   const checkNillionDatabase = async (fitbitId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:3001/get-latest-nft?fitbitid=${fitbitId}`
+        `https://nillion-pi.vercel.app/get-latest-nft?fitbitid=${fitbitId}`
       );
 
       if (!response.ok) {
@@ -136,7 +136,7 @@ export default function FloatingChat({
         now.getMinutes().toString().padStart(2, "0") + // MM
         "00"; // Fixed suffix
 
-      const response = await fetch("http://localhost:3001/add-nft-data", {
+      const response = await fetch("https://nillion-pi.vercel.app/add-nft-data", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

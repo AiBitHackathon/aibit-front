@@ -5,7 +5,7 @@ import Layout from '../layouts/Layout.astro';
 const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
 const itemsPerPage = 10;
 
-const response = await fetch('http://localhost:3001/get-leaderboard');
+const response = await fetch('https://nillion-pi.vercel.app/get-leaderboard');
 const data = await response.json();
 const leaderboard = data.leaderboard;
 
