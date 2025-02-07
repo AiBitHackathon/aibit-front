@@ -1,10 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
-import node from "@astrojs/node";
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import react from '@astrojs/react';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -12,10 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // https://astro.build/config
 export default defineConfig({
   integrations: [tailwind(), react()],
-  output: 'server',
-  adapter: node({
-    mode: 'standalone'
-  }),
+  output: 'static',
+  site: 'https://aibit-front-ic06d.sevalla.com', // Replace with your actual Sevalla domain
+  base: '/',
   server: {
     port: 8888,
     host: true,
