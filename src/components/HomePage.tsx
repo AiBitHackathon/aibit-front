@@ -53,7 +53,7 @@ export default function HomePage() {
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#00B0B9] to-[#008C94]">
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Venice</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AIbit</h1>
           <p className="text-gray-600">Your AI Fitness Assistant</p>
         </div>
 
