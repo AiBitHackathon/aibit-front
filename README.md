@@ -65,7 +65,7 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 
 ### Phase 4: Social Features (Upcoming)
 
-- 📅 Global leaderboard for activity streaks (WIP/Demo /leaderboard)
+- 📅 Global leaderboard for activity streaks (WIP see /leaderboard)
 - 📅 Friend challenges and competitions
 - 📅 Community achievements
 - 📅 Social sharing of milestones
@@ -76,3 +76,8 @@ AIbit is a next-generation health and fitness platform that combines Web3 techno
 - 📋 Multi-chain support
 - 📋 Advanced AI prediction models
 - 📋 Cross-platform data synchronization
+- 📋 More agentic features
+- 📋 Better management of NFTs
+- 📋 Dynamic NFT updates based on AI decision and health level
+- 📋 Dynamic linkable watch face
+- 📋 Watch companion
